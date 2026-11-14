@@ -1,0 +1,147 @@
+{
+  "title": "Урок 5. Режим редагування: піраміда",
+  "finish": "З куба вийшла вежа з пірамідою. Ти вмієш редагувати грані, видавлювати їх і зводити в точку.",
+  "features": [
+    "tool.select",
+    "object.delete",
+    "view.numpad",
+    "add.cube",
+    "add.cylinder",
+    "add.torus",
+    "tool.scale",
+    "tool.rotate",
+    "tool.move",
+    "panel.transform",
+    "view.camera",
+    "render.image",
+    "file.save",
+    "add.uv_sphere",
+    "redo.panel",
+    "object.duplicate",
+    "object.join"
+  ],
+  "scene": [
+    "cube"
+  ],
+  "placement": [
+    {
+      "kind": "cube",
+      "location": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "task": "Клацни по кубу, щоб виділити його.",
+      "check": {
+        "type": "selected",
+        "kind": "cube"
+      },
+      "highlight": [
+        "tool:builtin.select_box"
+      ]
+    },
+    {
+      "task": "Перейди в режим редагування: наведи мишку на сцену і натисни Tab. Або в списку Object Mode ліворуч угорі вибери Edit Mode.",
+      "unlock": [
+        "mode.edit"
+      ],
+      "check": {
+        "type": "mode",
+        "mode": "EDIT"
+      },
+      "highlight": [
+        "op:object.mode_set"
+      ],
+      "new_tool": {
+        "name": "Edit Mode",
+        "icon": "EDITMODE_HLT",
+        "text": "Режим редагування: змінюємо саму форму тіла, його вершини, ребра і грані. Tab повертає в Object Mode.",
+        "where": "список Object Mode ліворуч угорі",
+        "key": "Tab"
+      }
+    },
+    {
+      "task": "Увімкни вибір граней: натисни 3 (верхній ряд) або третю кнопку з квадратиком угорі.",
+      "unlock": [
+        "edit.select_mode"
+      ],
+      "check": {
+        "type": "select_mode",
+        "mode": "FACE"
+      },
+      "highlight": [
+        "template:template_header_3D_mode"
+      ],
+      "new_tool": {
+        "name": "Vertex / Edge / Face",
+        "icon": "FACESEL",
+        "text": "Що виділяємо клацанням: 1 вершини (точки), 2 ребра (лінії), 3 грані (площини).",
+        "where": "три кнопки угорі поруч з Edit Mode",
+        "key": "1, 2, 3"
+      }
+    },
+    {
+      "task": "Клацни по верхній грані куба, щоб виділити тільки її.",
+      "check": {
+        "type": "selected_face"
+      }
+    },
+    {
+      "task": "Видави грань угору: вибери Extrude Region ліворуч і тягни жовтий хрестик угору. Або натисни E і веди мишку вгору.",
+      "unlock": [
+        "edit.extrude"
+      ],
+      "check": {
+        "type": "height",
+        "kind": "cube",
+        "min": 1.8,
+        "hint": "Тягни вгору, поки верх не підніметься приблизно вдвічі."
+      },
+      "highlight": [
+        "tool:builtin.extrude_region"
+      ],
+      "new_tool": {
+        "name": "Extrude Region",
+        "icon": "MOD_SOLIDIFY",
+        "text": "Видавлює грань: з неї виростає нова частина тіла. Так з куба роблять вежі, ніжки, ручки.",
+        "where": "панель інструментів ліворуч",
+        "key": "E"
+      }
+    },
+    {
+      "task": "Зведи верхню грань у точку, щоб вийшла піраміда: натисни S, потім 0 і Enter.",
+      "check": {
+        "type": "apex",
+        "kind": "cube",
+        "hint": "Верхня грань має бути виділена. S, далі на клавіатурі 0, потім Enter."
+      },
+      "highlight": [
+        "tool:builtin.scale"
+      ]
+    },
+    {
+      "task": "Повернися в Object Mode: натисни Tab.",
+      "check": {
+        "type": "mode",
+        "mode": "OBJECT"
+      },
+      "highlight": [
+        "op:object.mode_set"
+      ]
+    }
+  ]
+}

@@ -21,6 +21,7 @@ from edu_lessons import checks, course  # noqa: E402
 OUT = os.environ.get("EDU_SHOTS", "/tmp/edu_shots")
 LESSON = os.environ.get("EDU_WALK", "lesson1")
 os.makedirs(OUT, exist_ok=True)
+os.chdir(OUT)  # експорт без збереженого .blend шукається в робочій теці
 
 
 def view3d():
@@ -74,6 +75,115 @@ ACTIONS = {
         lambda: setattr(checks.first_object("torus").location, "x", 1.1),
     ],
 }
+
+def view_axis(side):
+    return lambda: in_view(lambda: bpy.ops.view3d.view_axis(type=side))
+
+
+def add_beads():
+    in_view(lambda: bpy.ops.mesh.primitive_uv_sphere_add(segments=8, ring_count=6))
+
+
+def place_bead(x, y):
+    def act():
+        bead = bpy.context.active_object
+        bead.location = (x, y, 0.3)
+    return act
+
+
+def duplicate_bead(x, y):
+    def act():
+        in_view(lambda: bpy.ops.object.duplicate())
+        bpy.context.active_object.location = (x, y, 0.3)
+    return act
+
+
+def select_for_join():
+    for o in bpy.context.view_layer.objects:
+        o.select_set(checks.object_kind(o) in {"uv_sphere", "cylinder"})
+    bpy.context.view_layer.objects.active = checks.first_object("cylinder")
+
+
+def edit_select_top():
+    import bmesh
+    obj = bpy.context.active_object
+    mesh = bmesh.from_edit_mesh(obj.data)
+    for face in mesh.faces:
+        face.select_set(face.normal.z > 0.9)
+    bmesh.update_edit_mesh(obj.data)
+
+
+def material(kind, **inputs):
+    def act():
+        obj = checks.first_object(kind)
+        mat = obj.active_material or bpy.data.materials.new(kind)
+        if obj.active_material is None:
+            obj.data.materials.append(mat)
+        node = next(n for n in mat.node_tree.nodes if n.type == 'BSDF_PRINCIPLED')
+        for name, value in inputs.items():
+            node.inputs[name].default_value = value
+    return act
+
+
+def shading(mode):
+    _, area, _ = view3d()
+    area.spaces.active.shading.type = mode
+
+
+def keyframe(kind):
+    return lambda: checks.first_object(kind).keyframe_insert("location")
+
+
+EXPORT_PATH = os.path.join(OUT, "brelok.stl")
+
+ACTIONS.update({
+    "lesson3": [
+        view_axis("FRONT"), view_axis("TOP"), view_axis("RIGHT"),
+        lambda: in_view(lambda: bpy.ops.view3d.view_persportho()),
+        lambda: in_view(lambda: bpy.ops.view3d.view_camera()),
+        lambda: bpy.ops.render.render(),
+        lambda: bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "brelok.blend")),
+    ],
+    "lesson4": [
+        add_beads,
+        lambda: None,
+        lambda: setattr(bpy.context.active_object, "scale", (0.2, 0.2, 0.2)),
+        place_bead(0.5, 0),
+        duplicate_bead(-0.5, 0),
+        lambda: [duplicate_bead(0, 0.5)(), duplicate_bead(0, -0.5)()],
+        select_for_join,
+        lambda: in_view(lambda: bpy.ops.object.join()),
+    ],
+    "lesson5": [
+        lambda: select_only("cube"),
+        lambda: in_view(lambda: bpy.ops.object.editmode_toggle()),
+        lambda: in_view(lambda: bpy.ops.mesh.select_mode(type='FACE')),
+        edit_select_top,
+        lambda: in_view(lambda: bpy.ops.mesh.extrude_region_move(TRANSFORM_OT_translate={"value": (0, 0, 1)})),
+        lambda: in_view(lambda: bpy.ops.transform.resize(value=(0, 0, 1))),
+        lambda: in_view(lambda: bpy.ops.object.editmode_toggle()),
+    ],
+    "lesson6": [
+        lambda: select_only("cylinder"),
+        material("cylinder"),
+        material("cylinder", **{"Base Color": (0.1, 0.4, 0.9, 1.0)}),
+        lambda: shading('MATERIAL'),
+        lambda: select_only("torus"),
+        material("torus", Metallic=1.0),
+        material("torus", Roughness=0.2),
+        material("cylinder", Alpha=0.5),
+    ],
+    "lesson7": [
+        lambda: setattr(bpy.context.scene, "frame_end", 72),
+        lambda: [select_only("torus"), keyframe("torus")()],
+        lambda: bpy.context.scene.frame_set(72),
+        lambda: setattr(checks.first_object("torus").location, "z", 1.2),
+        keyframe("torus"),
+        lambda: in_view(lambda: bpy.ops.screen.animation_play()),
+        lambda: [in_view(lambda: bpy.ops.screen.animation_cancel()),
+                 in_view(lambda: bpy.ops.wm.stl_export(filepath=EXPORT_PATH))],
+    ],
+})
 
 plan = []
 

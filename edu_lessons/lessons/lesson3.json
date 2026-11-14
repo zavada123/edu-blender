@@ -1,0 +1,175 @@
+{
+  "title": "Урок 3. Вигляди, камера і рендер",
+  "finish": "Ти вмієш дивитися на модель з будь-якого боку, крізь камеру, робити картинку і зберігати роботу.",
+  "features": [
+    "tool.select",
+    "object.delete",
+    "view.numpad",
+    "add.cube",
+    "add.cylinder",
+    "add.torus",
+    "tool.scale",
+    "tool.rotate",
+    "tool.move",
+    "panel.transform"
+  ],
+  "scene": [
+    "cylinder",
+    "torus"
+  ],
+  "placement": [
+    {
+      "kind": "cylinder",
+      "location": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        0.15
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "torus",
+      "location": [
+        1.25,
+        0,
+        0
+      ],
+      "scale": [
+        0.35,
+        0.35,
+        0.35
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ]
+    }
+  ],
+  "settings": {
+    "render.engine": "BLENDER_WORKBENCH",
+    "render.resolution_percentage": 50
+  },
+  "steps": [
+    {
+      "task": "Подивись на брелок спереду: наведи мишку на сцену і натисни 1. Або View → Viewpoint → Front.",
+      "check": {
+        "type": "side_view",
+        "side": "FRONT"
+      },
+      "highlight": [
+        "menu:VIEW3D_MT_view_viewpoint",
+        "op:view3d.view_axis"
+      ]
+    },
+    {
+      "task": "Тепер зверху: натисни 7 (або View → Viewpoint → Top). Так брелок виглядає на кресленні вигляду зверху.",
+      "check": {
+        "type": "side_view",
+        "side": "TOP"
+      },
+      "highlight": [
+        "menu:VIEW3D_MT_view_viewpoint",
+        "op:view3d.view_axis"
+      ]
+    },
+    {
+      "task": "І збоку: натисни 3 (або View → Viewpoint → Right). Видно, яка тонка пластинка.",
+      "check": {
+        "type": "side_view",
+        "side": "RIGHT"
+      },
+      "highlight": [
+        "menu:VIEW3D_MT_view_viewpoint",
+        "op:view3d.view_axis"
+      ]
+    },
+    {
+      "task": "Поверни перспективу: натисни 5. У перспективі далекі частини менші, як у житті.",
+      "check": {
+        "type": "perspective",
+        "mode": "PERSP"
+      },
+      "highlight": [
+        "op:view3d.view_persportho"
+      ],
+      "new_tool": {
+        "name": "Perspective / Orthographic",
+        "icon": "VIEW_PERSPECTIVE",
+        "text": "Перспектива: далеке менше, як бачить око. Ортогональна проєкція: розміри не спотворюються, як на кресленні.",
+        "where": "меню View → Perspective/Orthographic",
+        "key": "5"
+      }
+    },
+    {
+      "task": "Подивись крізь камеру сцени: натисни 0 (або View → Cameras → Active Camera). Саме цю картинку побачить рендер.",
+      "unlock": [
+        "view.camera"
+      ],
+      "check": {
+        "type": "perspective",
+        "mode": "CAMERA"
+      },
+      "highlight": [
+        "menu:VIEW3D_MT_view_cameras",
+        "op:view3d.view_camera"
+      ],
+      "new_tool": {
+        "name": "Camera",
+        "icon": "CAMERA_DATA",
+        "text": "Камера це «фотоапарат» сцени. Рендер показує сцену саме з її точки.",
+        "where": "меню View → Cameras → Active Camera",
+        "key": "0"
+      }
+    },
+    {
+      "task": "Зроби картинку: натисни F12 або відкрий меню Render угорі і вибери Render Image. Подивись на результат і натисни Esc, щоб повернутися.",
+      "unlock": [
+        "render.image"
+      ],
+      "check": {
+        "type": "rendered"
+      },
+      "highlight": [
+        "menu:TOPBAR_MT_render",
+        "op:render.render"
+      ],
+      "new_tool": {
+        "name": "Render Image",
+        "icon": "RENDER_STILL",
+        "text": "Рендер це готове зображення сцени з камери: з освітленням і кольорами.",
+        "where": "меню Render → Render Image",
+        "key": "F12"
+      }
+    },
+    {
+      "task": "Збережи роботу: натисни Ctrl+S (або File → Save As), введи назву, наприклад brelok, і натисни Save.",
+      "unlock": [
+        "file.save"
+      ],
+      "check": {
+        "type": "saved"
+      },
+      "highlight": [
+        "menu:TOPBAR_MT_file",
+        "op:wm.save_as_mainfile"
+      ],
+      "new_tool": {
+        "name": "Save",
+        "icon": "FILE_TICK",
+        "text": "Зберігає всю сцену у файл .blend, щоб наступного уроку продовжити роботу.",
+        "where": "меню File → Save / Save As",
+        "key": "Ctrl+S"
+      }
+    }
+  ]
+}

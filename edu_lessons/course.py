@@ -6,6 +6,7 @@
 """
 
 import json
+import math
 import os
 
 import bpy
@@ -92,8 +93,15 @@ def _prepare_scene(lesson: dict) -> None:
             bpy.context.active_object["edu_kind"] = kind
     for placement in lesson.get("placement", []):
         obj = checks.first_object(placement["kind"])
-        if obj is not None:
-            obj.location = placement.get("location", obj.location)
+        if obj is None:
+            continue
+        obj.location = placement.get("location", obj.location)
+        obj.scale = placement.get("scale", obj.scale)
+        if "rotation" in placement:
+            obj.rotation_euler = [math.radians(a) for a in placement["rotation"]]
+    for path, value in lesson.get("settings", {}).items():
+        owner, _, prop = path.rpartition(".")
+        setattr(bpy.context.scene.path_resolve(owner) if owner else bpy.context.scene, prop, value)
     for obj in bpy.context.view_layer.objects:
         obj.select_set(False)
     bpy.context.view_layer.objects.active = None

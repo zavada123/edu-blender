@@ -1,0 +1,171 @@
+{
+  "title": "Урок 7. Анімація і файл для друку",
+  "finish": "Брелок рухається, а файл STL готовий для 3D-принтера. Курс пройдено!",
+  "features": [
+    "tool.select",
+    "object.delete",
+    "view.numpad",
+    "add.cube",
+    "add.cylinder",
+    "add.torus",
+    "tool.scale",
+    "tool.rotate",
+    "tool.move",
+    "panel.transform",
+    "view.camera",
+    "render.image",
+    "file.save",
+    "add.uv_sphere",
+    "redo.panel",
+    "object.duplicate",
+    "object.join",
+    "mode.edit",
+    "edit.select_mode",
+    "edit.extrude",
+    "panel.material",
+    "view.shading"
+  ],
+  "scene": [
+    "cylinder",
+    "torus"
+  ],
+  "placement": [
+    {
+      "kind": "cylinder",
+      "location": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        0.15
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "torus",
+      "location": [
+        1.25,
+        0,
+        0
+      ],
+      "scale": [
+        0.35,
+        0.35,
+        0.35
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "task": "Ролик буде 3 секунди: це 72 кадри (24 кадри за секунду). Унизу на шкалі часу в полі End введи 72.",
+      "unlock": [
+        "anim.timeline"
+      ],
+      "check": {
+        "type": "scene",
+        "property": "frame_end",
+        "equals": 72,
+        "tolerance": 0,
+        "hint": "Двічі клацни по полю End унизу, введи 72 і натисни Enter."
+      },
+      "highlight": [
+        "prop:Scene.frame_end"
+      ],
+      "new_tool": {
+        "name": "Timeline",
+        "icon": "TIME",
+        "text": "Шкала часу: кадри анімації. Синій прямокутник показує поточний кадр.",
+        "where": "унизу вікна"
+      }
+    },
+    {
+      "task": "На кадрі 1 виділи кільце (тор), наведи мишку на сцену і натисни I. Так ставиться ключовий кадр: Blender запам'ятає, де кільце зараз.",
+      "check": {
+        "type": "keyframes",
+        "kind": "torus",
+        "min_frames": 1
+      },
+      "new_tool": {
+        "name": "Insert Keyframe",
+        "icon": "KEY_HLT",
+        "text": "Ключовий кадр запам'ятовує положення тіла в цей момент. Між ключовими кадрами Blender рухає тіло сам.",
+        "where": "наведи мишку на 3D-вид",
+        "key": "I"
+      }
+    },
+    {
+      "task": "Перейди на кадр 72: на шкалі часу клацни біля числа 72 або введи 72 у поле поточного кадру.",
+      "check": {
+        "type": "scene",
+        "property": "frame_current",
+        "equals": 72,
+        "tolerance": 0,
+        "hint": "Shift+→ одразу переходить на останній кадр."
+      },
+      "highlight": [
+        "prop:Scene.frame_current"
+      ]
+    },
+    {
+      "task": "Підніми кільце: інструментом Move тягни синю стрілку вгору (висота Z більше 1).",
+      "check": {
+        "type": "transform",
+        "kind": "torus",
+        "property": "location",
+        "axis": "z",
+        "min": 1.0,
+        "hint": "Виділи тор і тягни синю стрілку вгору."
+      },
+      "highlight": [
+        "tool:builtin.move"
+      ]
+    },
+    {
+      "task": "Знову натисни I над сценою, щоб запам'ятати нове положення на кадрі 72.",
+      "check": {
+        "type": "keyframes",
+        "kind": "torus",
+        "min_frames": 2
+      }
+    },
+    {
+      "task": "Запусти анімацію: наведи мишку на сцену і натисни пробіл. Кільце підніметься за 3 секунди. Ще раз пробіл зупиняє.",
+      "check": {
+        "type": "playing"
+      }
+    },
+    {
+      "task": "Збережи модель для 3D-друку: File → Export → STL (.stl), введи назву brelok і натисни Export STL.",
+      "unlock": [
+        "file.export"
+      ],
+      "check": {
+        "type": "exported",
+        "operator": "wm.stl_export",
+        "hint": "Меню File угорі → Export → STL (.stl), потім кнопка Export STL праворуч унизу вікна."
+      },
+      "highlight": [
+        "menu:TOPBAR_MT_file_export",
+        "op:wm.stl_export"
+      ],
+      "new_tool": {
+        "name": "Export STL",
+        "icon": "EXPORT",
+        "text": "STL це формат для 3D-принтера: тільки форма, без кольорів. Програма-слайсер розріже його на шари.",
+        "where": "меню File → Export → STL"
+      }
+    }
+  ]
+}

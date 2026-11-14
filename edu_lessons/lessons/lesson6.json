@@ -1,0 +1,174 @@
+{
+  "title": "Урок 6. Матеріали: колір і метал",
+  "finish": "Брелок кольоровий, кільце металеве і блискуче. Ти вмієш створювати матеріали.",
+  "features": [
+    "tool.select",
+    "object.delete",
+    "view.numpad",
+    "add.cube",
+    "add.cylinder",
+    "add.torus",
+    "tool.scale",
+    "tool.rotate",
+    "tool.move",
+    "panel.transform",
+    "view.camera",
+    "render.image",
+    "file.save",
+    "add.uv_sphere",
+    "redo.panel",
+    "object.duplicate",
+    "object.join",
+    "mode.edit",
+    "edit.select_mode",
+    "edit.extrude"
+  ],
+  "scene": [
+    "cylinder",
+    "torus"
+  ],
+  "placement": [
+    {
+      "kind": "cylinder",
+      "location": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        0.15
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "torus",
+      "location": [
+        1.25,
+        0,
+        0
+      ],
+      "scale": [
+        0.35,
+        0.35,
+        0.35
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "task": "Клацни по пластинці брелока, щоб виділити її.",
+      "check": {
+        "type": "selected",
+        "kind": "cylinder"
+      }
+    },
+    {
+      "task": "Праворуч у редакторі властивостей відкрий вкладку Material (червона кулька внизу стовпчика) і натисни New.",
+      "unlock": [
+        "panel.material"
+      ],
+      "check": {
+        "type": "material",
+        "kind": "cylinder"
+      },
+      "highlight": [
+        "area:properties"
+      ],
+      "new_tool": {
+        "name": "Material",
+        "icon": "MATERIAL",
+        "text": "Матеріал задає, з чого зроблене тіло: колір, блиск, метал чи пластик, прозорість.",
+        "where": "редактор властивостей праворуч, вкладка Material"
+      }
+    },
+    {
+      "task": "Вибери колір пластинки: клацни по полю Base Color і вибери яскравий колір на колі.",
+      "check": {
+        "type": "material",
+        "kind": "cylinder",
+        "property": "color",
+        "hint": "Клацни по білій смузі Base Color і перетягни точку на кольоровому колі."
+      },
+      "highlight": [
+        "area:properties"
+      ]
+    },
+    {
+      "task": "Щоб побачити матеріали, угорі праворуч у 3D-виді натисни третю кульку (Material Preview). Або натисни Z і вибери Material Preview.",
+      "unlock": [
+        "view.shading"
+      ],
+      "check": {
+        "type": "shading",
+        "mode": "MATERIAL"
+      },
+      "highlight": [
+        "prop:View3DShading.type"
+      ],
+      "new_tool": {
+        "name": "Material Preview",
+        "icon": "MATERIAL",
+        "text": "Показ сцени з матеріалами й освітленням. Solid (друга кулька) показує лише форму.",
+        "where": "кульки угорі праворуч у 3D-виді",
+        "key": "Z"
+      }
+    },
+    {
+      "task": "Тепер кільце: клацни по тору.",
+      "check": {
+        "type": "selected",
+        "kind": "torus"
+      }
+    },
+    {
+      "task": "Зроби кільце металевим: створи йому матеріал (New) і постав Metallic = 1.",
+      "check": {
+        "type": "material",
+        "kind": "torus",
+        "property": "Metallic",
+        "min": 0.8,
+        "hint": "Двічі клацни по полю Metallic, введи 1 і натисни Enter."
+      },
+      "highlight": [
+        "area:properties"
+      ]
+    },
+    {
+      "task": "Зроби метал блискучим: зменш Roughness (шорсткість) до 0,2.",
+      "check": {
+        "type": "material",
+        "kind": "torus",
+        "property": "Roughness",
+        "max": 0.3,
+        "hint": "Що менша Roughness, то більше дзеркальний блиск."
+      },
+      "highlight": [
+        "area:properties"
+      ]
+    },
+    {
+      "task": "Зроби пластинку напівпрозорою: виділи її і в матеріалі зменш Alpha до 0,5.",
+      "check": {
+        "type": "material",
+        "kind": "cylinder",
+        "property": "Alpha",
+        "max": 0.7,
+        "hint": "Alpha 1 це непрозоро, 0 повністю прозоро. Поле Alpha нижче за Base Color."
+      },
+      "highlight": [
+        "area:properties"
+      ]
+    }
+  ]
+}

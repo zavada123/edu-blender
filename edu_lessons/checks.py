@@ -58,14 +58,19 @@ def first_object(kind: str):
     return found[0] if found else None
 
 
-def view_region(context):
-    screen = context.window.screen if context.window else None
-    if screen is None:
+def view_space(context):
+    window = context.window or (context.window_manager.windows[0] if context.window_manager.windows else None)
+    if window is None:
         return None
-    for area in screen.areas:
+    for area in window.screen.areas:
         if area.type == 'VIEW_3D':
-            return area.spaces.active.region_3d
+            return area.spaces.active
     return None
+
+
+def view_region(context):
+    space = view_space(context)
+    return space.region_3d if space else None
 
 
 def _missing(kind: str):
@@ -107,12 +112,48 @@ def check_exists(context, params, state):
     return True, None
 
 
+SIDE_ROTATION = {
+    "FRONT": (math.radians(90), 0.0, 0.0),
+    "RIGHT": (math.radians(90), 0.0, math.radians(90)),
+    "TOP": (0.0, 0.0, 0.0),
+}
+SIDE_HINT = {
+    "FRONT": "Наведи мишку на сцену і натисни 1. Або View → Viewpoint → Front.",
+    "RIGHT": "Наведи мишку на сцену і натисни 3. Або View → Viewpoint → Right.",
+    "TOP": "Наведи мишку на сцену і натисни 7. Або View → Viewpoint → Top.",
+}
+
+
 def check_side_view(context, params, state):
     rv3d = view_region(context)
     if rv3d is None:
         return False, None
+    side = params.get("side")
+    hint = SIDE_HINT.get(side, "Наведи мишку на сцену і натисни 1 (спереду), 3 (справа) або 7 (зверху).")
     if rv3d.view_perspective != 'ORTHO' or not getattr(rv3d, "is_orthographic_side_view", True):
-        return False, "Наведи мишку на сцену і натисни 1 (спереду), 3 (справа) або 7 (зверху). Або View → Viewpoint → Front."
+        return False, hint
+    if side:
+        from mathutils import Euler
+        expected = Euler(SIDE_ROTATION[side]).to_quaternion()
+        if expected.rotation_difference(rv3d.view_rotation).angle > math.radians(2):
+            return False, hint
+    return True, None
+
+
+PERSPECTIVE_HINT = {
+    "PERSP": "Натисни 5, щоб повернути перспективу (далекі предмети менші).",
+    "CAMERA": "Натисни 0 або відкрий View → Cameras → Active Camera.",
+    "ORTHO": "Натисни 5, щоб увімкнути ортогональну проєкцію.",
+}
+
+
+def check_perspective(context, params, state):
+    rv3d = view_region(context)
+    if rv3d is None:
+        return False, None
+    mode = params["mode"]
+    if rv3d.view_perspective != mode:
+        return False, PERSPECTIVE_HINT.get(mode)
     return True, None
 
 
@@ -128,6 +169,10 @@ def _transform_value(obj, prop: str, axis: int) -> float:
     if prop == "rotation":
         return math.degrees(obj.rotation_euler[axis]) % 360
     return getattr(obj, prop)[axis]
+
+
+def compare(value: float, params) -> bool:
+    return _compare(value, params)
 
 
 def check_transform(context, params, state):
@@ -147,12 +192,14 @@ CHECKS = {
     "absent": check_absent,
     "exists": check_exists,
     "side_view": check_side_view,
+    "perspective": check_perspective,
     "transform": check_transform,
 }
 
 
 def run(context, spec: dict, state: dict):
-    check = CHECKS.get(spec["type"])
+    from . import checks_extra
+    check = CHECKS.get(spec["type"]) or checks_extra.CHECKS.get(spec["type"])
     if check is None:
         return False, f"Невідома перевірка: {spec['type']}"
     return check(context, spec, state)

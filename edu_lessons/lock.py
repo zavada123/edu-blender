@@ -19,63 +19,16 @@ import gpu
 from gpu_extras.batch import batch_for_shader
 
 from . import coach
-
-TOOLS_BY_FEATURE = {
-    "tool.select": {"builtin.select", "builtin.select_box", "builtin.select_circle", "builtin.select_lasso"},
-    "tool.move": {"builtin.move"},
-    "tool.rotate": {"builtin.rotate"},
-    "tool.scale": {"builtin.scale"},
-}
-
-ALWAYS_OPS = {
-    "view3d.rotate", "view3d.move", "view3d.zoom", "view3d.dolly", "view3d.view_selected",
-    "view3d.view_all", "view3d.select", "view3d.select_box", "view3d.select_circle",
-    "view3d.select_lasso", "object.select_all", "ed.undo", "ed.redo", "ed.undo_history",
-    "view3d.ndof_orbit", "view3d.ndof_orbit_zoom", "view3d.ndof_pan", "view3d.ndof_all",
-    "view3d.zoom_border", "view3d.smoothview", "view3d.view_orbit", "view3d.view_roll",
-    "outliner.item_activate", "outliner.select_box", "outliner.item_openclose",
-    "outliner.expanded_toggle", "outliner.show_active", "outliner.select_walk",
-}
-
-ALWAYS_MENUS = {"VIEW3D_MT_select_object"}
-
-PRIMITIVES = ("cube", "cylinder", "torus", "uv_sphere", "cone", "plane")
-
-OPS_BY_FEATURE = {
-    "object.delete": {"object.delete"},
-    "tool.move": {"transform.translate"},
-    "tool.rotate": {"transform.rotate"},
-    "tool.scale": {"transform.resize"},
-    "view.numpad": {"view3d.view_axis", "view3d.view_persportho"},
-    **{f"add.{kind}": {f"mesh.primitive_{kind}_add"} for kind in PRIMITIVES},
-}
-
-MENUS_BY_FEATURE = {
-    "object.delete": {"VIEW3D_MT_object"},
-    "view.numpad": {"VIEW3D_MT_view", "VIEW3D_MT_view_viewpoint"},
-    **{f"add.{kind}": {"VIEW3D_MT_add", "VIEW3D_MT_mesh_add"} for kind in PRIMITIVES},
-}
-
-# Підказки до кроків: де в меню шукати потрібну кнопку.
-MENU_PATH = {
-    "VIEW3D_MT_mesh_add": "VIEW3D_MT_add",
-    "VIEW3D_MT_view_viewpoint": "VIEW3D_MT_view",
-}
+from . import features as F
 
 LOCKED_KEYMAPS = (
     "Window", "Screen", "Screen Editing", "Frames", "3D View", "3D View Generic",
-    "Object Mode", "Object Non-modal", "Outliner",
-)
-
-# Клавіші верхнього ряду для виглядів (не в усіх є цифровий блок).
-TOP_ROW_VIEWS = (
-    ('ONE', "view3d.view_axis", {"type": 'FRONT'}),
-    ('THREE', "view3d.view_axis", {"type": 'RIGHT'}),
-    ('SEVEN', "view3d.view_axis", {"type": 'TOP'}),
-    ('FIVE', "view3d.view_persportho", {}),
+    "Object Mode", "Object Non-modal", "Outliner", "Mesh", "Animation",
 )
 
 SKIP_CLASSES = {"STATUSBAR_HT_header"}
+# Вікна збереження файлу і перегляду рендеру лишаються звичайними.
+SKIP_SPACES = {"FILE_BROWSER", "IMAGE_EDITOR", "PREFERENCES"}
 HIGHLIGHT_MARK = "→ "
 ADDON_CLASS_PREFIX = "EDU_"
 TOOLBAR_PANEL = "VIEW3D_PT_tools_active"
@@ -88,10 +41,11 @@ PASSTHROUGH_METHODS = {
 }
 OPERATOR_METHODS = {"operator", "operator_menu_hold", "operator_enum", "operator_menu_enum"}
 MENU_METHODS = {"menu"}
+PROP_METHODS = {"prop", "prop_enum", "prop_menu_enum", "prop_with_popover", "prop_with_menu", "props_enum"}
 
 
 # Редактори, які в уроках не потрібні: поверх них малюємо напівпрозору тінь.
-SHADED_SPACES = (bpy.types.SpaceOutliner, bpy.types.SpaceDopeSheetEditor)
+SHADED_SPACES = {"OUTLINER": bpy.types.SpaceOutliner, "DOPESHEET_EDITOR": bpy.types.SpaceDopeSheetEditor}
 SHADE_COLOR = (0.0, 0.0, 0.0, 0.5)
 
 
@@ -102,11 +56,16 @@ class _State:
     allowed_ops = set()
     allowed_menus = set()
     allowed_tools = set()
+    allowed_panels = set()
+    allowed_props = set()
+    allowed_templates = set()
+    features = set()
     highlight = set()
     keymap_original = {}
     draw_original = {}
     view_keys = []
     shade_handlers = []
+    render_display = None
 
 
 _state = _State()
@@ -115,29 +74,17 @@ _state = _State()
 # ---------------------------------------------------------------- what is open
 
 def _allowed_tools(features: set) -> set:
-    allowed = set()
-    for feature, ids in TOOLS_BY_FEATURE.items():
-        if feature in features:
-            allowed |= ids
-    return allowed
+    return F.collect(F.TOOLS, features)
 
 
-def _allowed_ops(features: set) -> set:
-    allowed = set(ALWAYS_OPS)
-    for feature, ops in OPS_BY_FEATURE.items():
-        if feature in features:
-            allowed |= ops
-    if _allowed_tools(features):
-        allowed |= TOOL_OPS
-    return allowed
-
-
-def _allowed_menus(features: set) -> set:
-    allowed = set(ALWAYS_MENUS)
-    for feature, menus in MENUS_BY_FEATURE.items():
-        if feature in features:
-            allowed |= menus
-    return allowed
+def _set_allowed(features: set) -> None:
+    _state.features = set(features)
+    _state.allowed_tools = _allowed_tools(features)
+    _state.allowed_ops = F.collect(F.OPS, features, F.ALWAYS_OPS) | (TOOL_OPS if _state.allowed_tools else set())
+    _state.allowed_menus = F.collect(F.MENUS, features, F.ALWAYS_MENUS)
+    _state.allowed_panels = F.collect(F.PANELS, features)
+    _state.allowed_props = F.collect(F.PROPS, features)
+    _state.allowed_templates = F.collect(F.TEMPLATES, features)
 
 
 def _expand_highlight(tokens) -> set:
@@ -145,8 +92,8 @@ def _expand_highlight(tokens) -> set:
     result = set(tokens or ())
     for token in list(result):
         kind, _, name = token.partition(":")
-        while kind == "menu" and name in MENU_PATH:
-            name = MENU_PATH[name]
+        while kind == "menu" and name in F.MENU_PARENT:
+            name = F.MENU_PARENT[name]
             result.add("menu:" + name)
     return result
 
@@ -191,7 +138,7 @@ class _ShadedLayout:
         sub.enabled = enabled
         if alert:
             sub.alert = True
-            if self._tools is None:
+            if self._tools is None and method in OPERATOR_METHODS | MENU_METHODS:
                 # У меню й заголовках колір alert не видно, тому додаємо стрілку до напису.
                 kwargs = dict(kwargs, text=HIGHLIGHT_MARK + _item_label(method, args, kwargs))
         return getattr(sub, method)(*args, **kwargs)
@@ -205,6 +152,12 @@ class _ShadedLayout:
         if method in MENU_METHODS:
             name = args[0] if args else kwargs.get("menu", "")
             return name in _state.allowed_menus, "menu:" + name in _state.highlight
+        if method in PROP_METHODS and len(args) >= 2:
+            data = args[0]
+            key = getattr(getattr(data, "bl_rna", None), "identifier", "") + "." + str(args[1])
+            return key in _state.allowed_props, "prop:" + key in _state.highlight
+        if method.startswith("template_"):
+            return method in _state.allowed_templates, "template:" + method in _state.highlight
         return False, False
 
 
@@ -267,7 +220,7 @@ def _wrap_shaded(func, is_toolbar, is_header):
 
 def _wrap_disabled(func):
     def draw(self, context):
-        self.layout.enabled = False
+        self.layout.enabled = type(self).__name__ in _state.allowed_panels
         func(self, context)
     draw._edu_original = func
     return draw
@@ -282,6 +235,8 @@ def _ui_classes() -> list:
         if cls in (bpy.types.Panel, bpy.types.Menu, bpy.types.Header):
             continue
         if cls.__name__.startswith(ADDON_CLASS_PREFIX) or cls.__name__ in SKIP_CLASSES:
+            continue
+        if getattr(cls, "bl_space_type", "") in SKIP_SPACES:
             continue
         found.append(cls)
     return found
@@ -323,7 +278,10 @@ def _restore_shading() -> None:
 
 # ---------------------------------------------------------------- shade overlay
 
-def _draw_shade():
+def _draw_shade(space_type):
+    feature = F.SHADED_EDITORS.get(space_type)
+    if feature and feature in _state.features:
+        return
     region = bpy.context.region
     shader = gpu.shader.from_builtin('UNIFORM_COLOR')
     w, h = region.width, region.height
@@ -337,9 +295,9 @@ def _draw_shade():
 def _apply_shade_overlay() -> None:
     if _state.shade_handlers:
         return
-    for space in SHADED_SPACES:
+    for space_type, space in SHADED_SPACES.items():
         for region_type in ('WINDOW', 'HEADER'):
-            handler = space.draw_handler_add(_draw_shade, (), region_type, 'POST_PIXEL')
+            handler = space.draw_handler_add(_draw_shade, (space_type,), region_type, 'POST_PIXEL')
             _state.shade_handlers.append((space, handler, region_type))
 
 
@@ -363,7 +321,7 @@ def ensure_allowed_tool(context, features: set) -> None:
 def _kmi_allowed(kmi) -> bool:
     if kmi.idname in _state.allowed_ops:
         return True
-    if kmi.idname == "wm.call_menu":
+    if kmi.idname in {"wm.call_menu", "wm.call_menu_pie"}:
         return getattr(kmi.properties, "name", "") in _state.allowed_menus
     return False
 
@@ -397,18 +355,18 @@ def _restore_keymaps(context) -> None:
 
 
 def _apply_view_keys(context, features: set) -> None:
-    """Клавіші 1/3/7/5 верхнього ряду для виглядів.
+    """Клавіші верхнього ряду для виглядів і камери.
 
     Додаємо прямо в розкладку користувача: розкладку додатків Blender
     підмішує лише під час повного оновлення клавіатурних налаштувань.
     """
     keyconfig = context.window_manager.keyconfigs.user
-    if keyconfig is None or _state.view_keys or "view.numpad" not in features:
-        return
-    keymap = keyconfig.keymaps.get("Object Mode")
+    keymap = keyconfig.keymaps.get("Object Mode") if keyconfig else None
     if keymap is None:
         return
-    for key, idname, props in TOP_ROW_VIEWS:
+    for feature, key, idname, props in F.TOP_ROW_KEYS:
+        if feature not in features or (idname, key) in _state.view_keys:
+            continue
         kmi = keymap.keymap_items.new(idname, key, 'PRESS')
         for prop, value in props.items():
             setattr(kmi.properties, prop, value)
@@ -458,12 +416,13 @@ def _show_lesson_sidebar(context) -> None:
 # ---------------------------------------------------------------- public
 
 def apply(context, features: set, highlight=()) -> None:
-    _state.allowed_ops = _allowed_ops(features)
-    _state.allowed_menus = _allowed_menus(features)
-    _state.allowed_tools = _allowed_tools(features)
+    _set_allowed(features)
     _state.highlight = _expand_highlight(highlight)
     if not _state.active:
         context.preferences.use_preferences_save = False
+        _state.render_display = context.preferences.view.render_display_type
+        # Рендер у тому ж вікні: у браузері нові вікна не відкриваються.
+        context.preferences.view.render_display_type = 'SCREEN'
         _apply_shading()
         _apply_shade_overlay()
         _show_lesson_sidebar(context)
@@ -489,6 +448,8 @@ def restore(context) -> None:
     _restore_shading()
     _restore_shade_overlay()
     coach.disable()
+    if _state.render_display:
+        context.preferences.view.render_display_type = _state.render_display
     _state.active = False
     _state.highlight = set()
     redraw_all(context)

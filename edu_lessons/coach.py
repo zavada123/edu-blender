@@ -39,12 +39,42 @@ HEADER_MENU_X = {
     "VIEW3D_MT_add": 290,
     "VIEW3D_MT_object": 335,
 }
+# Центр меню у верхньому рядку вікна (File, Edit, Render), пікселі від лівого краю вікна.
+TOPBAR_MENU_X = {
+    "TOPBAR_MT_file": 42,
+    "TOPBAR_MT_edit": 78,
+    "TOPBAR_MT_render": 125,
+}
 MENU_OF_OP = {
     "op:mesh.primitive_": "VIEW3D_MT_add",
     "op:object.delete": "VIEW3D_MT_object",
+    "op:object.duplicate": "VIEW3D_MT_object",
+    "op:object.join": "VIEW3D_MT_object",
     "op:view3d.view_axis": "VIEW3D_MT_view",
+    "op:view3d.view_camera": "VIEW3D_MT_view",
+    "op:render.render": "TOPBAR_MT_render",
+    "op:wm.save": "TOPBAR_MT_file",
+    "op:wm.stl_export": "TOPBAR_MT_file",
 }
-SUBMENU_PARENT = {"VIEW3D_MT_mesh_add": "VIEW3D_MT_add", "VIEW3D_MT_view_viewpoint": "VIEW3D_MT_view"}
+SUBMENU_PARENT = {
+    "VIEW3D_MT_mesh_add": "VIEW3D_MT_add",
+    "VIEW3D_MT_view_viewpoint": "VIEW3D_MT_view",
+    "VIEW3D_MT_view_cameras": "VIEW3D_MT_view",
+    "TOPBAR_MT_file_export": "TOPBAR_MT_file",
+}
+# Інші місця в заголовку 3D-виду: відступ від лівого (>0) або правого (<0) краю.
+HEADER_ITEM_X = {
+    "prop:View3DShading.type": -75,
+    "template:template_header_3D_mode": 205,
+    "op:object.mode_set": 95,
+}
+
+# Поля шкали часу під 3D-видом: відступ центру поля від правого краю 3D-виду.
+FRAME_FIELD_X = {
+    "Scene.frame_current": 326,
+    "Scene.frame_start": 208,
+    "Scene.frame_end": 113,
+}
 
 # Панель інструментів: висота кнопки й відступи (масштаб 1).
 TOOL_TOP = 6
@@ -94,6 +124,9 @@ def _arrow(side, x, y, w, h, target, size):
     if side == "right":
         base = min(max(ty, y + size + RADIUS), y + h - size - RADIUS)
         return [(x + w, base - size), (x + w, base + size), (x + w + size, base)]
+    if side == "bottom":
+        base = min(max(tx, x + size + RADIUS), x + w - size - RADIUS)
+        return [(base - size, y), (base + size, y), (base, y - size)]
     return []
 
 
@@ -123,8 +156,12 @@ def _region(area, kind):
 def _tool_index(tool_id):
     """(номер кнопки, кількість розділювачів перед нею) на панелі інструментів."""
     from bl_ui.space_toolsystem_toolbar import VIEW3D_PT_tools_active as panel
+    mode = bpy.context.mode if bpy.context.mode in panel._tools else 'OBJECT'
     index = groups = 0
-    for item in panel._tools[None] + panel._tools.get('OBJECT', []):
+    items = list(panel._tools[None]) + list(panel._tools.get(mode, []))
+    for item in items:
+        if callable(item) and type(item) is not tuple and not hasattr(item, "idname"):
+            continue
         if item is None:
             groups += 1
             continue
@@ -148,15 +185,29 @@ def _target(token, area, window_region):
         index, groups = found
         y = tools.y + tools.height - (TOOL_TOP + index * TOOL_STEP + groups * TOOL_GROUP_GAP + TOOL_HALF) * s
         return "left", (tools.x + tools.width - left, y - window_region.y)
+    # Стрілка вгору впирається в нижній край заголовків 3D-виду.
+    edge = _ceiling(area, window_region)
+    if token in HEADER_ITEM_X:
+        offset = HEADER_ITEM_X[token] * s
+        x = area.x + offset if offset > 0 else area.x + area.width + offset
+        return "top", (x - left, edge)
     if kind in {"menu", "op"}:
         menu = name if kind == "menu" else next((m for p, m in MENU_OF_OP.items() if token.startswith(p)), None)
         menu = SUBMENU_PARENT.get(menu, menu)
+        if menu in TOPBAR_MENU_X:
+            return "top", (TOPBAR_MENU_X[menu] * s - left, edge)
         if menu not in HEADER_MENU_X:
             return None
-        # Стрілка вгору впирається в нижній край рядка налаштувань інструмента.
-        tool_header = _region(area, 'TOOL_HEADER')
-        edge = tool_header.y if tool_header and tool_header.height > 1 else top
-        return "top", (area.x + HEADER_MENU_X[menu] * s - left, edge - window_region.y)
+        return "top", (area.x + HEADER_MENU_X[menu] * s - left, edge)
+    if name in FRAME_FIELD_X:
+        return "bottom", (window_region.width - FRAME_FIELD_X[name] * s, 0)
+    if kind == "hud":
+        return "bottom", (110 * s, 0)
+    if kind == "area":
+        # Бічна панель 3D-виду малюється поверх, тому стрілку ставимо біля її лівого краю.
+        ui = _region(area, 'UI')
+        right = ui.x - left if ui is not None and ui.width > 1 else window_region.width
+        return "right", (right, top - 220 * s - window_region.y)
     if kind == "panel":
         ui = _region(area, 'UI')
         if ui is None or ui.width <= 1:
@@ -188,6 +239,8 @@ def _layout(side, target, w, h, region, s, ceiling):
         x, y = target[0] - 40 * s, target[1] - h - ARROW * s - margin
     elif side == "right":
         x, y = target[0] - w - ARROW * s - margin, target[1] - h / 2
+    elif side == "bottom":
+        x, y = target[0] - 40 * s, target[1] + ARROW * s + margin
     else:
         x, y = (region.width - w) / 2, 40 * s
     x = min(max(x, margin), region.width - w - margin)

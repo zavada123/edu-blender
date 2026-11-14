@@ -1,0 +1,187 @@
+{
+  "title": "Урок 4. Копії та об'єднання",
+  "finish": "На брелоку чотири намистинки, і все це одне тіло. Ти вмієш копіювати, виділяти кілька тіл і об'єднувати їх.",
+  "features": [
+    "tool.select",
+    "object.delete",
+    "view.numpad",
+    "add.cube",
+    "add.cylinder",
+    "add.torus",
+    "tool.scale",
+    "tool.rotate",
+    "tool.move",
+    "panel.transform",
+    "view.camera",
+    "render.image",
+    "file.save"
+  ],
+  "scene": [
+    "cylinder",
+    "torus"
+  ],
+  "placement": [
+    {
+      "kind": "cylinder",
+      "location": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        0.15
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "torus",
+      "location": [
+        1.25,
+        0,
+        0
+      ],
+      "scale": [
+        0.35,
+        0.35,
+        0.35
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "task": "Додай кульку-намистинку: Add → Mesh → UV Sphere.",
+      "unlock": [
+        "add.uv_sphere"
+      ],
+      "check": {
+        "type": "exists",
+        "kind": "uv_sphere"
+      },
+      "highlight": [
+        "menu:VIEW3D_MT_mesh_add",
+        "op:mesh.primitive_uv_sphere_add"
+      ]
+    },
+    {
+      "task": "Зроби кульку гранчастою: ліворуч унизу розгорни панель «Add UV Sphere» і постав Segments = 8, Rings = 6.",
+      "unlock": [
+        "redo.panel"
+      ],
+      "check": {
+        "type": "vertices",
+        "kind": "uv_sphere",
+        "max": 100,
+        "hint": "Панель з'являється одразу після додавання. Якщо її немає, видали кульку і додай знову."
+      },
+      "highlight": [
+        "hud:redo"
+      ],
+      "new_tool": {
+        "name": "Adjust Last Operation",
+        "icon": "PREFERENCES",
+        "text": "Панель останньої дії: тут можна змінити параметри тільки-но доданого тіла (кількість граней, розмір).",
+        "where": "ліворуч унизу 3D-виду",
+        "key": "F9"
+      }
+    },
+    {
+      "task": "Зменш намистинку інструментом Scale (клавіша S), щоб її розмір (Scale) був не більше 0,3.",
+      "check": {
+        "type": "transform",
+        "kind": "uv_sphere",
+        "property": "scale",
+        "axis": "x",
+        "max": 0.3,
+        "hint": "Вибери Scale ліворуч і тягни білий кружечок до центру. Або S і рух мишкою."
+      },
+      "highlight": [
+        "tool:builtin.scale"
+      ]
+    },
+    {
+      "task": "Поклади намистинку на пластинку: інструментом Move тягни синю стрілку вгору, поки кулька не ляже зверху (висота Z від 0,1 до 0,6).",
+      "check": {
+        "type": "transform",
+        "kind": "uv_sphere",
+        "property": "location",
+        "axis": "z",
+        "min": 0.1,
+        "max": 0.6,
+        "hint": "Синя стрілка рухає вгору-вниз. Подивись збоку (клавіша 3), так видно висоту."
+      },
+      "highlight": [
+        "tool:builtin.move"
+      ]
+    },
+    {
+      "task": "Зроби копію намистинки: Shift+D, відсунь мишкою і клацни. Або Object → Duplicate Objects.",
+      "unlock": [
+        "object.duplicate"
+      ],
+      "check": {
+        "type": "exists",
+        "kind": "uv_sphere",
+        "count": 2
+      },
+      "highlight": [
+        "menu:VIEW3D_MT_object",
+        "op:object.duplicate_move"
+      ],
+      "new_tool": {
+        "name": "Duplicate Objects",
+        "icon": "DUPLICATE",
+        "text": "Робить копію виділеного тіла з тими самими розмірами і кольором. Копію одразу можна пересувати.",
+        "where": "меню Object → Duplicate Objects",
+        "key": "Shift+D"
+      }
+    },
+    {
+      "task": "Зроби ще дві копії, щоб на пластинці було 4 намистинки. Розстав їх по колу.",
+      "check": {
+        "type": "exists",
+        "kind": "uv_sphere",
+        "count": 4
+      }
+    },
+    {
+      "task": "Виділи пластинку і всі намистинки: клацни по першому тілу, а далі по кожному наступному з затиснутим Shift. Пластинку клацни останньою.",
+      "check": {
+        "type": "selected_count",
+        "min": 5
+      }
+    },
+    {
+      "task": "Об'єднай їх в одне тіло: Ctrl+J або Object → Join.",
+      "unlock": [
+        "object.join"
+      ],
+      "check": {
+        "type": "mesh_count",
+        "max": 2,
+        "hint": "Мають бути виділені пластинка і всі 4 намистинки. Потім Ctrl+J."
+      },
+      "highlight": [
+        "menu:VIEW3D_MT_object",
+        "op:object.join"
+      ],
+      "new_tool": {
+        "name": "Join",
+        "icon": "AUTOMERGE_ON",
+        "text": "Сполучає кілька виділених тіл в одне. Його потім легко рухати, фарбувати і друкувати.",
+        "where": "меню Object → Join",
+        "key": "Ctrl+J"
+      }
+    }
+  ]
+}

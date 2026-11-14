@@ -7,14 +7,16 @@ Install from Disk → edu_lessons.zip. Урок обирають у бічній
 
 import bpy
 
-from . import course, ui
+from . import checks_extra, course, ui
 
 
 def register():
     ui.register()
+    checks_extra.register_handlers()
     course.auto_start_from_env()
 
 
 def unregister():
     course.stop(bpy.context)
+    checks_extra.unregister_handlers()
     ui.unregister()
