@@ -167,7 +167,9 @@ def _compare(value: float, params) -> bool:
 
 def _transform_value(obj, prop: str, axis: int) -> float:
     if prop == "rotation":
-        return math.degrees(obj.rotation_euler[axis]) % 360
+        # Як у полі Rotation: від -180° до 180°.
+        angle = math.degrees(obj.rotation_euler[axis]) % 360
+        return angle - 360 if angle > 180 else angle
     return getattr(obj, prop)[axis]
 
 
@@ -175,18 +177,27 @@ def compare(value: float, params) -> bool:
     return _compare(value, params)
 
 
+FIELD_LABEL = {"location": "Location", "rotation": "Rotation", "scale": "Scale"}
+
+
+def _field_text(prop: str, axis: str, value: float) -> str:
+    if prop == "rotation":
+        return f"{FIELD_LABEL[prop]} {axis.upper()} = {value:.0f}°"
+    return f"{FIELD_LABEL[prop]} {axis.upper()} = {value:.2f}".replace(".", ",")
+
+
 def check_transform(context, params, state):
     kind = params["kind"]
     obj = first_object(kind)
     if obj is None:
         return _missing(kind)
-    value = _transform_value(obj, params["property"], AXIS[params["axis"]])
-    ok = _compare(value, params)
-    if not ok and params["property"] == "rotation" and params.get("symmetric"):
-        # Тіло, симетричне при повороті на 180° (тор, циліндр): -90° виглядає так само, як 90°.
-        ok = _compare((value + 180) % 360, params)
-    if not ok:
-        return False, params.get("hint")
+    prop, axis = params["property"], params["axis"]
+    value = _transform_value(obj, prop, AXIS[axis])
+    if not _compare(value, params):
+        # Показуємо, що зараз у полі, щоб учень бачив, скільки ще лишилось.
+        now = "Зараз " + _field_text(prop, axis, value) + "."
+        hint = params.get("hint")
+        return False, f"{now} {hint}" if hint else now
     return True, None
 
 

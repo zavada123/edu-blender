@@ -1,16 +1,45 @@
 {
   "title": "Урок 2. Збираємо брелок",
   "finish": "Брелок зібрано! Ти вмієш переміщувати, масштабувати й обертати тіла, а також задавати точні числа.",
-  "features": ["tool.select", "object.delete", "view.numpad", "add.cube", "add.cylinder", "add.torus"],
-  "scene": ["cylinder", "torus"],
-  "placement": [{"kind": "torus", "location": [0, 0, 0]}],
+  "features": [
+    "tool.select",
+    "object.delete",
+    "view.numpad",
+    "add.cube",
+    "add.cylinder",
+    "add.torus"
+  ],
+  "scene": [
+    "cylinder",
+    "torus"
+  ],
+  "placement": [
+    {
+      "kind": "torus",
+      "location": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
   "steps": [
     {
-      "task": "Сплющ циліндр, щоб вийшла пластинка брелока. Клацни по циліндру, на панелі інструментів ліворуч вибери Scale і тягни синій кубик (вісь Z) донизу, поки висота не стане меншою за 0,3.",
-      "unlock": ["tool.scale"],
-      "check": {"type": "transform", "kind": "cylinder", "property": "scale", "axis": "z", "max": 0.3,
-                "hint": "Тягни саме синій кубик: він змінює лише висоту (вісь Z)."},
-      "highlight": ["tool:builtin.scale"],
+      "task": "Сплющ циліндр, щоб вийшла пластинка брелока. Клацни по циліндру, на панелі інструментів ліворуч вибери Scale і тягни синій кубик (вісь Z) донизу, поки Scale Z не стане меншим за 0,3. Число видно праворуч: у стовпчику значків редактора властивостей клацни помаранчевий квадратик (вкладка Object), далі група Transform, рядок Scale Z.",
+      "unlock": [
+        "tool.scale"
+      ],
+      "check": {
+        "type": "transform",
+        "kind": "cylinder",
+        "property": "scale",
+        "axis": "z",
+        "max": 0.3,
+        "hint": "Тягни саме синій кубик: він змінює лише висоту (вісь Z)."
+      },
+      "highlight": [
+        "tool:builtin.scale"
+      ],
       "new_tool": {
         "name": "Scale",
         "icon": "FULLSCREEN_ENTER",
@@ -20,11 +49,22 @@
       }
     },
     {
-      "task": "Поверни тор, щоб він стояв вертикально, як кільце. Клацни по тору, вибери Rotate і крути червоне коло (вісь X) на 90°.",
-      "unlock": ["tool.rotate"],
-      "check": {"type": "transform", "kind": "torus", "property": "rotation", "axis": "x", "equals": 90, "tolerance": 10, "symmetric": true,
-                "hint": "Крути червоне коло. Під час обертання затисни Ctrl, тоді кут змінюється кроками по 5°."},
-      "highlight": ["tool:builtin.rotate"],
+      "task": "Постав тор вертикально, як кільце: Rotation X має бути рівно 90°. Клацни по тору, вибери Rotate і крути червоне коло (вісь X), затиснувши Ctrl: кут змінюється кроками по 5°. Число видно праворуч: у стовпчику значків редактора властивостей клацни помаранчевий квадратик (вкладка Object), далі група Transform, рядок Rotation X.",
+      "unlock": [
+        "tool.rotate"
+      ],
+      "check": {
+        "type": "transform",
+        "kind": "torus",
+        "property": "rotation",
+        "axis": "x",
+        "equals": 90,
+        "tolerance": 1,
+        "hint": "Найточніше з клавіатури: наведи мишку на сцену, натисни R, потім X, набери 90 і натисни Enter."
+      },
+      "highlight": [
+        "tool:builtin.rotate"
+      ],
       "new_tool": {
         "name": "Rotate",
         "icon": "DRIVER_ROTATIONAL_DIFFERENCE",
@@ -34,11 +74,21 @@
       }
     },
     {
-      "task": "Перемісти тор на край пластинки: вибери Move і тягни червону стрілку (вісь X), поки тор не опиниться біля краю (X більше 0,9).",
-      "unlock": ["tool.move"],
-      "check": {"type": "transform", "kind": "torus", "property": "location", "axis": "x", "min": 0.9,
-                "hint": "Тягни червону стрілку праворуч."},
-      "highlight": ["tool:builtin.move"],
+      "task": "Перемісти тор на край пластинки: вибери Move і тягни червону стрілку (вісь X), поки Location X не стане більшим за 0,9. Число видно праворуч: у стовпчику значків редактора властивостей клацни помаранчевий квадратик (вкладка Object), далі група Transform, рядок Location X.",
+      "unlock": [
+        "tool.move"
+      ],
+      "check": {
+        "type": "transform",
+        "kind": "torus",
+        "property": "location",
+        "axis": "x",
+        "min": 0.9,
+        "hint": "Тягни червону стрілку праворуч."
+      },
+      "highlight": [
+        "tool:builtin.move"
+      ],
       "new_tool": {
         "name": "Move",
         "icon": "ORIENTATION_GLOBAL",
@@ -49,10 +99,21 @@
     },
     {
       "task": "Тепер точно: на бічній панелі праворуч відкрий вкладку Item і в групі Transform введи для тора Location X = 1.1.",
-      "unlock": ["panel.transform"],
-      "check": {"type": "transform", "kind": "torus", "property": "location", "axis": "x", "equals": 1.1, "tolerance": 0.02,
-                "hint": "Двічі клацни по полю X у рядку Location, введи 1.1 і натисни Enter."},
-      "highlight": ["panel:transform"],
+      "unlock": [
+        "panel.transform"
+      ],
+      "check": {
+        "type": "transform",
+        "kind": "torus",
+        "property": "location",
+        "axis": "x",
+        "equals": 1.1,
+        "tolerance": 0.02,
+        "hint": "Двічі клацни по полю X у рядку Location, введи 1.1 і натисни Enter."
+      },
+      "highlight": [
+        "panel:transform"
+      ],
       "new_tool": {
         "name": "Transform",
         "icon": "OBJECT_DATA",
