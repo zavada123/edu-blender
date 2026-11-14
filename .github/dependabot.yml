@@ -1,0 +1,11 @@
+# Оновлення версій залежностей. Security-оновлення Dependabot створює окремо, одразу після алерту.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      timezone: "Europe/Kyiv"
+    groups:
+      github-actions:
+        patterns: ["*"]
