@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Едупростір: уроки 3D</title>
+    <!-- GitHub Pages не вміє ставити заголовки COOP/COEP; цей service worker додає їх і перезавантажує сторінку один раз. -->
+    <script src="coi-serviceworker.js"></script>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <section id="splash" aria-live="polite">
+      <main class="stage">
+        <div id="splash-shell" class="stage-inner" data-phase="loading">
+          <h1 class="splash-title">Едупростір: уроки 3D</h1>
+          <p class="project-copy">Справжній Blender просто в браузері. Інструменти відкриваються крок за кроком.</p>
+
+          <nav id="lesson-list" class="lesson-list" hidden></nav>
+          <p id="lesson-title" class="lesson-title" hidden></p>
+
+          <div id="stage-card" class="launch-panel" data-phase="loading">
+            <div class="panel-loading" aria-label="Завантаження Blender">
+              <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <div id="progress-fill" class="progress-fill"></div>
+              </div>
+              <div class="progress-meta">
+                <span id="progress-phase">Підготовка</span>
+                <span id="progress-percent"></span>
+              </div>
+              <p id="splash-status" class="splash-status">Завантажуємо Blender (близько 65 МБ, далі з кешу)…</p>
+            </div>
+            <div class="panel-ready" aria-label="Запуск">
+              <button id="start-btn" type="button" class="start-btn">Почати урок</button>
+              <p id="webgpu-note" class="note" hidden></p>
+            </div>
+            <div id="gpu-warning" class="gpu-warning" hidden>
+              <p id="gpu-warning-text" class="gpu-warning-text"></p>
+              <label id="gpu-ack-row" class="gpu-ack-row" hidden>
+                <input type="checkbox" id="gpu-ack" />
+                <span>Запустити без відеокарти (буде дуже повільно).</span>
+              </label>
+            </div>
+          </div>
+
+          <details class="startup-console">
+            <summary>Журнал запуску</summary>
+            <div id="console-output" class="console-box" role="log"></div>
+          </details>
+          <p class="credits">
+            Blender — GPL, збірка для браузера:
+            <a href="https://github.com/heyputer/blender-wasm" target="_blank" rel="noreferrer">heyputer/blender-wasm</a>.
+          </p>
+        </div>
+      </main>
+    </section>
+    <canvas id="canvas" width="1536" height="864" tabindex="0"></canvas>
+    <div id="edu-progress" class="edu-progress" hidden></div>
+    <script src="boot.js"></script>
+  </body>
+</html>
