@@ -22,7 +22,7 @@
     {
       "task": "Поверни тор, щоб він стояв вертикально, як кільце. Клацни по тору, вибери Rotate і крути червоне коло (вісь X) на 90°.",
       "unlock": ["tool.rotate"],
-      "check": {"type": "transform", "kind": "torus", "property": "rotation", "axis": "x", "equals": 90, "tolerance": 10,
+      "check": {"type": "transform", "kind": "torus", "property": "rotation", "axis": "x", "equals": 90, "tolerance": 10, "symmetric": true,
                 "hint": "Крути червоне коло. Під час обертання затисни Ctrl, тоді кут змінюється кроками по 5°."},
       "highlight": ["tool:builtin.rotate"],
       "new_tool": {

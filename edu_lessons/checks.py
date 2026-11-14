@@ -181,7 +181,11 @@ def check_transform(context, params, state):
     if obj is None:
         return _missing(kind)
     value = _transform_value(obj, params["property"], AXIS[params["axis"]])
-    if not _compare(value, params):
+    ok = _compare(value, params)
+    if not ok and params["property"] == "rotation" and params.get("symmetric"):
+        # Тіло, симетричне при повороті на 180° (тор, циліндр): -90° виглядає так само, як 90°.
+        ok = _compare((value + 180) % 360, params)
+    if not ok:
         return False, params.get("hint")
     return True, None
 
