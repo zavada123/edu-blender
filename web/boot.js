@@ -60,6 +60,8 @@
   function pythonBootstrap(zipBase64) {
     return [
       "import base64, io, sys, zipfile",
+      "import bpy",
+      "bpy.context.preferences.view.show_splash = False",
       "zipfile.ZipFile(io.BytesIO(base64.b64decode('" + zipBase64 + "'))).extractall('/tmp/edu')",
       "sys.path.insert(0, '/tmp/edu')",
       "import edu_lessons",

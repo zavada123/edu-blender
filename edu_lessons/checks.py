@@ -26,6 +26,16 @@ KIND_LABEL = {
     "plane": "площину",
 }
 
+# Як пункт підписано в меню Add → Mesh.
+MENU_LABEL = {
+    "cube": "Cube",
+    "cylinder": "Cylinder",
+    "torus": "Torus",
+    "uv_sphere": "UV Sphere",
+    "cone": "Cone",
+    "plane": "Plane",
+}
+
 AXIS = {"x": 0, "y": 1, "z": 2}
 
 
@@ -86,14 +96,14 @@ def check_view_rotated(context, params, state):
 def check_absent(context, params, state):
     kind = params["kind"]
     if find_objects(kind):
-        return False, f"Виділи {KIND_LABEL.get(kind, kind)} і натисни Delete або X."
+        return False, f"Виділи {KIND_LABEL.get(kind, kind)} і натисни X або Delete (або Object → Delete)."
     return True, None
 
 
 def check_exists(context, params, state):
     kind = params["kind"]
     if len(find_objects(kind)) < params.get("count", 1):
-        return False, f"Відкрий меню «Додати» вгорі вікна і вибери: {KIND_LABEL.get(kind, kind)}."
+        return False, f"Відкрий меню Add угорі → Mesh → {MENU_LABEL.get(kind, kind)}."
     return True, None
 
 
@@ -102,7 +112,7 @@ def check_side_view(context, params, state):
     if rv3d is None:
         return False, None
     if rv3d.view_perspective != 'ORTHO' or not getattr(rv3d, "is_orthographic_side_view", True):
-        return False, "Натисни 1, 3 або 7 на цифровій клавіатурі, або клацни по букві осі вгорі праворуч."
+        return False, "Наведи мишку на сцену і натисни 1 (спереду), 3 (справа) або 7 (зверху). Або View → Viewpoint → Front."
     return True, None
 
 

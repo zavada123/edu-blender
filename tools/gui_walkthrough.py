@@ -10,6 +10,8 @@ import sys
 
 import bpy
 
+bpy.context.preferences.view.show_splash = False
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
@@ -61,9 +63,9 @@ ACTIONS = {
         lambda: select_only("cube"),
         rotate_view,
         lambda: in_view(lambda: bpy.ops.object.delete()),
-        lambda: in_view(lambda: bpy.ops.edu.add_primitive(kind="cylinder")),
-        lambda: in_view(lambda: bpy.ops.edu.add_primitive(kind="torus")),
-        lambda: in_view(lambda: bpy.ops.edu.view(side="FRONT")),
+        lambda: in_view(lambda: bpy.ops.mesh.primitive_cylinder_add()),
+        lambda: in_view(lambda: bpy.ops.mesh.primitive_torus_add()),
+        lambda: in_view(lambda: bpy.ops.view3d.view_axis(type="FRONT")),
     ],
     "lesson2": [
         lambda: setattr(checks.first_object("cylinder"), "scale", (1, 1, 0.2)),

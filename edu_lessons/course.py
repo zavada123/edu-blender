@@ -80,8 +80,11 @@ def _features_until(lesson: dict, step_index: int) -> set:
 
 
 def _prepare_scene(lesson: dict) -> None:
-    for obj in bpy.context.view_layer.objects:
-        obj.select_set(False)
+    """Сцена уроку: лише тіла зі списку "scene" (камера і світло лишаються)."""
+    wanted = set(lesson.get("scene", []))
+    for obj in list(bpy.data.objects):
+        if obj.type == 'MESH' and checks.object_kind(obj) not in wanted:
+            bpy.data.objects.remove(obj)
     for kind in lesson.get("scene", []):
         if not checks.find_objects(kind):
             operator = getattr(bpy.ops.mesh, f"primitive_{kind}_add")
@@ -91,6 +94,9 @@ def _prepare_scene(lesson: dict) -> None:
         obj = checks.first_object(placement["kind"])
         if obj is not None:
             obj.location = placement.get("location", obj.location)
+    for obj in bpy.context.view_layer.objects:
+        obj.select_set(False)
+    bpy.context.view_layer.objects.active = None
 
 
 def start(context, lesson_id: str, step: int = 0) -> None:
@@ -109,7 +115,8 @@ def _enter_step(context, index: int) -> None:
     _run.step = index
     _run.check_state = {}
     _run.features = _features_until(_run.lesson, index)
-    lock.apply(context, _run.features)
+    step = _run.lesson["steps"][index]
+    lock.apply(context, _run.features, step.get("highlight", []))
 
 
 def stop(context) -> None:

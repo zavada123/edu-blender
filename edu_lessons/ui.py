@@ -1,25 +1,10 @@
-"""Панель «Урок», меню «Додати»/«Вигляд» і оператори уроку."""
+"""Панель «Урок», панель Transform і оператори уроку."""
 
 import textwrap
 
 import bpy
 
 from . import course
-
-ADD_ITEMS = (
-    ("cube", "Куб", 'MESH_CUBE'),
-    ("cylinder", "Циліндр", 'MESH_CYLINDER'),
-    ("torus", "Тор", 'MESH_TORUS'),
-    ("uv_sphere", "Сфера", 'MESH_UVSPHERE'),
-    ("cone", "Конус", 'MESH_CONE'),
-    ("plane", "Площина", 'MESH_PLANE'),
-)
-
-VIEW_ITEMS = (
-    ("FRONT", "Спереду (1)"),
-    ("RIGHT", "Справа (3)"),
-    ("TOP", "Зверху (7)"),
-)
 
 CHARS_PER_PIXEL = 1 / 7.5
 ICON_CHARS = 5
@@ -34,52 +19,6 @@ def _wrapped(layout, context, text: str, icon='NONE') -> None:
     col = layout.column(align=True)
     for i, line in enumerate(textwrap.wrap(text, width) or [""]):
         col.label(text=line, icon=icon if i == 0 else 'BLANK1' if icon != 'NONE' else 'NONE')
-
-
-class EDU_OT_add_primitive(bpy.types.Operator):
-    bl_idname = "edu.add_primitive"
-    bl_label = "Додати тіло"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    kind: bpy.props.StringProperty()
-
-    def execute(self, context):
-        operator = getattr(bpy.ops.mesh, f"primitive_{self.kind}_add", None)
-        if operator is None:
-            return {'CANCELLED'}
-        operator()
-        context.active_object["edu_kind"] = self.kind
-        return {'FINISHED'}
-
-
-class EDU_OT_view(bpy.types.Operator):
-    bl_idname = "edu.view"
-    bl_label = "Вигляд"
-
-    side: bpy.props.StringProperty()
-
-    def execute(self, context):
-        bpy.ops.view3d.view_axis(type=self.side)
-        return {'FINISHED'}
-
-
-class EDU_MT_add(bpy.types.Menu):
-    bl_label = "Додати"
-
-    def draw(self, context):
-        features = course.current_features()
-        for kind, label, icon in ADD_ITEMS:
-            if f"add.{kind}" in features:
-                self.layout.operator("edu.add_primitive", text=label, icon=icon).kind = kind
-
-
-class EDU_MT_view(bpy.types.Menu):
-    bl_label = "Вигляд"
-
-    def draw(self, context):
-        for side, label in VIEW_ITEMS:
-            self.layout.operator("edu.view", text=label).side = side
-        self.layout.operator("view3d.view_persportho", text="Перспектива / ортогональна (5)")
 
 
 class EDU_OT_start_lesson(bpy.types.Operator):
@@ -113,34 +52,34 @@ class EDU_OT_stop(bpy.types.Operator):
 
 
 class EDU_PT_transform(bpy.types.Panel):
-    """Заміна вбудованої панелі «Трансформація» (вкладка «Елемент»).
+    """Заміна вбудованої панелі Transform (вкладка Item).
 
-    Вбудовану панель написано на C, її не можна сховати й повернути з Python,
-    тому додаток реєструє власну під тим самим іменем. Під час уроку вона
-    з'являється лише тоді, коли урок відкрив "panel.transform".
+    Вбудовану панель написано на C, її не можна вимкнути з Python, тому додаток
+    реєструє власну під тим самим іменем і з тими самими підписами. Під час уроку
+    вона сіра, доки урок не відкрив "panel.transform".
     """
 
     bl_idname = "VIEW3D_PT_transform"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = "Елемент"
-    bl_label = "Трансформація"
-    bl_translation_context = "edu"
+    bl_category = "Item"
+    bl_label = "Transform"
 
     @classmethod
     def poll(cls, context):
-        if context.active_object is None:
-            return False
-        return course.current_lesson() is None or "panel.transform" in course.current_features()
+        return context.active_object is not None
 
     def draw(self, context):
         obj = context.active_object
         layout = self.layout
         layout.use_property_split = True
-        layout.prop(obj, "location", text="Розташування")
-        layout.prop(obj, "rotation_euler", text="Обертання")
-        layout.prop(obj, "scale", text="Масштаб")
-        layout.prop(obj, "dimensions", text="Розміри")
+        lesson = course.current_lesson()
+        layout.enabled = lesson is None or "panel.transform" in course.current_features()
+        layout.alert = lesson is not None and "panel:transform" in (course.current_step() or {}).get("highlight", [])
+        layout.prop(obj, "location")
+        layout.prop(obj, "rotation_euler", text="Rotation")
+        layout.prop(obj, "scale")
+        layout.prop(obj, "dimensions")
 
 
 class EDU_PT_lesson(bpy.types.Panel):
@@ -217,10 +156,6 @@ class EDU_PT_lesson(bpy.types.Panel):
 
 
 CLASSES = (
-    EDU_OT_add_primitive,
-    EDU_OT_view,
-    EDU_MT_add,
-    EDU_MT_view,
     EDU_OT_start_lesson,
     EDU_OT_check,
     EDU_OT_stop,
@@ -228,32 +163,11 @@ CLASSES = (
     EDU_PT_transform,
 )
 
-_addon_keymaps = []
-
-
-def register_keymaps() -> None:
-    keyconfig = bpy.context.window_manager.keyconfigs.addon
-    if keyconfig is None:
-        return
-    keymap = keyconfig.keymaps.new(name="Object Mode", space_type='EMPTY')
-    kmi = keymap.keymap_items.new("wm.call_menu", 'A', 'PRESS', shift=True)
-    kmi.properties.name = "EDU_MT_add"
-    _addon_keymaps.append((keymap, kmi))
-
-
-def unregister_keymaps() -> None:
-    for keymap, kmi in _addon_keymaps:
-        keymap.keymap_items.remove(kmi)
-    _addon_keymaps.clear()
-
-
 def register() -> None:
     for cls in CLASSES:
         bpy.utils.register_class(cls)
-    register_keymaps()
 
 
 def unregister() -> None:
-    unregister_keymaps()
     for cls in reversed(CLASSES):
         bpy.utils.unregister_class(cls)

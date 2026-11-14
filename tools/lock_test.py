@@ -1,5 +1,6 @@
-"""Перевірка блокувань у справжньому вікні: Tab і G заблоковані в уроці 1,
-а після «Вчителю: весь Blender» знову працюють.
+"""Перевірка клавіш у справжньому вікні: Tab і G заблоковані в уроці 1,
+клавіша 1 верхнього ряду дає вигляд спереду, коли урок відкрив вигляди,
+а після «Вчителю: весь Blender» Tab і G знову працюють.
 
   blender --factory-startup --enable-event-simulate -p 0 0 1400 860 --python tools/lock_test.py
 """
@@ -44,6 +45,12 @@ def drag_after_g():
     w.event_simulate(type='LEFTMOUSE', value='RELEASE', x=x + 120, y=y)
 
 
+def view_state():
+    area = next(a for a in win().screen.areas if a.type == 'VIEW_3D')
+    rv3d = area.spaces.active.region_3d
+    return rv3d.view_perspective, round(rv3d.view_rotation.w, 3)
+
+
 def cube():
     return bpy.data.objects["Cube"]
 
@@ -60,6 +67,12 @@ steps = [
     lambda: results.__setitem__("locked_tab_mode", bpy.context.object.mode),
     drag_after_g,
     lambda: results.__setitem__("locked_g_x", round(cube().location.x, 3)),
+    lambda: press('ONE'),
+    lambda: results.__setitem__("key1_before_unlock", view_state()),
+    lambda: course.start(bpy.context, "lesson1", 5),
+    lambda: press('ONE'),
+    lambda: results.__setitem__("key1_after_unlock", view_state()),
+    lambda: course.start(bpy.context, "lesson1"),
     lambda: bpy.ops.edu.stop(),
     select_cube,
     lambda: press('TAB'),
