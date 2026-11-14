@@ -197,16 +197,26 @@ class _ShadedSelf:
         setattr(self._real, name, value)
 
 
+def _active_tool(context):
+    try:
+        return context.workspace.tools.from_space_view3d_mode(context.mode).idname
+    except (AttributeError, RuntimeError, TypeError):
+        return None
+
+
 def _toolbar_flags(cls, context):
     """(enabled, alert) для кожної кнопки панелі інструментів по черзі."""
     flags = []
+    # Інструмент уже вибрано: червоне підсвічування знімаємо, лишається звичайне синє.
+    active = _active_tool(context)
     for item in cls.tools_from_context(context):
         if item is None:
             continue
         # ToolDef теж namedtuple, тому група інструментів це саме tuple.
         group = item if type(item) is tuple else (item,)
         ids = {tool.idname for tool in group if tool is not None}
-        flags.append((bool(ids & _state.allowed_tools), any("tool:" + i in _state.highlight for i in ids)))
+        alert = active not in ids and any("tool:" + i in _state.highlight for i in ids)
+        flags.append((bool(ids & _state.allowed_tools), alert))
     return iter(flags)
 
 
