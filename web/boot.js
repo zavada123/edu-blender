@@ -1,6 +1,7 @@
 // Запуск браузерного Blender з додатком уроків.
 //
 // 1. ?lesson=<id> вибирає урок; без нього показуємо список уроків.
+//    ?lesson=free відкриває вільний режим: повний Blender без уроку, усі інструменти відкриті.
 // 2. Додаток (edu_lessons.zip) передаємо Blender через --python-expr,
 //    урок через змінну середовища EDU_LESSON.
 // 3. Рядки "EDU_EVENT {json}" зі stdout Blender показуємо на смужці прогресу
@@ -15,6 +16,8 @@
   const badge = document.getElementById("edu-progress");
   const finishCard = document.getElementById("edu-finish");
   const DONE_KEY = "edu-blender-done";
+  const FREE_ID = "free";
+  const FREE_MODE = { id: FREE_ID, title: "Вільний режим" };
   let allLessons = [];
   let currentLesson = null;
 
@@ -83,6 +86,13 @@
   function showLessonList(lessons) {
     const list = document.getElementById("lesson-list");
     const done = loadDone();
+    const free = document.createElement("a");
+    free.className = "lesson-link free";
+    free.href = lessonHref(FREE_ID);
+    free.textContent = FREE_MODE.title;
+    const freeNote = document.createElement("span");
+    freeNote.textContent = "усі інструменти, без завдань";
+    free.appendChild(freeNote);
     const nextId = (lessons.find((item) => !done.includes(item.id)) || {}).id;
     for (const lesson of lessons) {
       const link = document.createElement("a");
@@ -96,6 +106,7 @@
       link.appendChild(steps);
       list.appendChild(link);
     }
+    list.appendChild(free);
     list.hidden = false;
     document.getElementById("stage-card").hidden = true;
   }
@@ -166,8 +177,9 @@
   }
 
   function startBlender(zipBase64, lesson) {
-    const env = { EDU_LESSON: lesson.id };
-    if (stepParam && /^\d{1,2}$/.test(stepParam)) env.EDU_STEP = stepParam;
+    // Вільний режим: без EDU_LESSON додаток не запускає урок і нічого не блокує.
+    const env = lesson.id === FREE_ID ? {} : { EDU_LESSON: lesson.id };
+    if (lesson.id !== FREE_ID && stepParam && /^\d{1,2}$/.test(stepParam)) env.EDU_STEP = stepParam;
     window.__BARGS = ["--python-expr", pythonBootstrap(zipBase64)];
     window.__CAPENV = env;
     watchConsole();
@@ -193,7 +205,7 @@
     }
     const lessons = await loadLessons();
     allLessons = lessons;
-    const lesson = isValidId(lessonId) && lessons.find((item) => item.id === lessonId);
+    const lesson = lessonId === FREE_ID ? FREE_MODE : isValidId(lessonId) && lessons.find((item) => item.id === lessonId);
     if (!lesson) {
       showLessonList(lessons);
       return;
@@ -203,6 +215,7 @@
     title.textContent = lesson.title;
     title.hidden = false;
     document.title = lesson.title + " · Едупростір";
+    if (lesson.id === FREE_ID) document.getElementById("start-btn").textContent = "Відкрити Blender";
     const response = await fetch("edu_lessons.zip", { cache: "no-cache" });
     if (!response.ok) throw new Error("edu_lessons.zip: " + response.status);
     startBlender(toBase64(await response.arrayBuffer()), lesson);
