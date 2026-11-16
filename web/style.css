@@ -184,3 +184,4 @@ html, body {
 .edu-finish-btn.secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
 .lesson-link.done { color: var(--muted); }
 .lesson-link.next { border-color: var(--accent); }
+.lesson-link.free { border-style: dashed; }

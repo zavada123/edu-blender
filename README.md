@@ -34,7 +34,7 @@
 ## Тестова сторінка (GitHub Pages)
 
 `web/` — сторінка, яка завантажує браузерний Blender і запускає урок: `index.html` показує список уроків,
-`index.html?lesson=lesson1` відкриває урок (`&step=N` — з певного кроку).
+`index.html?lesson=lesson1` відкриває урок (`&step=N` — з певного кроку), `index.html?lesson=free` — вільний режим: повний Blender без уроку.
 `boot.js` передає додаток через `--python-expr`, ловить рядки `EDU_EVENT` і пересилає їх сайту
 через `BroadcastChannel("edu-blender")` та `window.opener.postMessage`.
 GitHub Pages не ставить заголовки COOP/COEP, тому їх додає `coi-serviceworker.js`.
