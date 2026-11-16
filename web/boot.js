@@ -18,23 +18,81 @@
   let allLessons = [];
   let currentLesson = null;
 
-  // Пройдені уроки пам'ятаємо в цьому браузері: у списку вони з галочкою.
+  // Пройдені уроки з галочкою. Гість пам'ятає їх лише в цьому браузері. Учень, що увійшов на сайт, має свій список у
+  // браузері й той самий список в акаунті (/api/student/trainer-solved): так уроки бачить учитель класу.
+  // Список гостя в акаунт не йде: за шкільним комп'ютером це не робота учня, який увійшов.
+  const API = "/api/student/";
+  const TRAINER = "blender";
+  const ACCOUNT_WAIT_MS = 3000;
+  let studentId = null;
+
+  function doneKey() {
+    return studentId ? DONE_KEY + ":" + studentId : DONE_KEY;
+  }
+
   function loadDone() {
     try {
-      const value = JSON.parse(localStorage.getItem(DONE_KEY) || "[]");
+      const value = JSON.parse(localStorage.getItem(doneKey()) || "[]");
       return Array.isArray(value) ? value.filter(isValidId) : [];
     } catch (err) {
       return [];
     }
   }
 
-  function markDone(id) {
+  function saveDone(done) {
     try {
-      const done = loadDone();
-      if (!done.includes(id)) localStorage.setItem(DONE_KEY, JSON.stringify(done.concat(id)));
+      localStorage.setItem(doneKey(), JSON.stringify(done));
     } catch (err) {
       // Приватне вікно чи заборонене сховище: урок пройдено, лише галочки в списку не буде.
     }
+  }
+
+  function sendDone(ids) {
+    if (!studentId || ids.length === 0) return;
+    fetch(API + "trainer-solved", {
+      method: "PUT",
+      credentials: "same-origin",
+      keepalive: true,
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ trainer: TRAINER, solved: ids }),
+    }).catch(() => {
+      // Без мережі: урок лишається в цьому браузері й піде в акаунт під час наступного відкриття сторінки.
+    });
+  }
+
+  function markDone(id) {
+    const done = loadDone();
+    if (!done.includes(id)) saveDone(done.concat(id));
+    sendDone([id]);
+  }
+
+  async function getJson(path) {
+    try {
+      const response = await fetch(API + path, { credentials: "same-origin" });
+      return response.ok ? await response.json() : null;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  // Учень, що увійшов: його список у браузері поєднуємо з акаунтом. Гість, дорослий чи без мережі: нічого не робимо.
+  async function syncWithAccount() {
+    const profile = await getJson("profile");
+    const id = profile && typeof profile.id === "string" && /^[0-9a-f-]{36}$/.test(profile.id) ? profile.id : null;
+    if (!id) return;
+    studentId = id;
+    const all = await getJson("trainer-solved");
+    if (!Array.isArray(all)) return;
+    const mine = all.find((item) => item && item.trainer === TRAINER);
+    const server = mine && Array.isArray(mine.solved) ? mine.solved.filter(isValidId) : [];
+    const local = loadDone();
+    saveDone(server.concat(local.filter((lessonId) => !server.includes(lessonId))));
+    sendDone(local.filter((lessonId) => !server.includes(lessonId)));
+  }
+
+  // Повільний сервер не затримує урок довше за кілька секунд.
+  function syncInTime() {
+    return Promise.race([syncWithAccount(), new Promise((resolve) => setTimeout(resolve, ACCOUNT_WAIT_MS))]);
   }
 
   function lessonHref(id) {
@@ -191,7 +249,7 @@
       }, 4000);
       return;
     }
-    const lessons = await loadLessons();
+    const [lessons] = await Promise.all([loadLessons(), syncInTime()]);
     allLessons = lessons;
     const lesson = isValidId(lessonId) && lessons.find((item) => item.id === lessonId);
     if (!lesson) {
