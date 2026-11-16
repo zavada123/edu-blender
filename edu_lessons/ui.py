@@ -145,6 +145,7 @@ class EDU_PT_lesson(bpy.types.Panel):
         box = self.layout.box()
         box.label(text="Урок завершено!", icon='FUND')
         _wrapped(box, context, lesson.get("finish", "Молодець!"))
+        _wrapped(self.layout, context, "Наступний урок і список уроків чекають у картці внизу сторінки.", icon='FORWARD')
         self._draw_footer()
 
     def _draw_footer(self):

@@ -13,6 +13,54 @@
   const stepParam = params.get("step");
   const channel = "BroadcastChannel" in window ? new BroadcastChannel("edu-blender") : null;
   const badge = document.getElementById("edu-progress");
+  const finishCard = document.getElementById("edu-finish");
+  const DONE_KEY = "edu-blender-done";
+  let allLessons = [];
+  let currentLesson = null;
+
+  // Пройдені уроки пам'ятаємо в цьому браузері: у списку вони з галочкою.
+  function loadDone() {
+    try {
+      const value = JSON.parse(localStorage.getItem(DONE_KEY) || "[]");
+      return Array.isArray(value) ? value.filter(isValidId) : [];
+    } catch (err) {
+      return [];
+    }
+  }
+
+  function markDone(id) {
+    try {
+      const done = loadDone();
+      if (!done.includes(id)) localStorage.setItem(DONE_KEY, JSON.stringify(done.concat(id)));
+    } catch (err) {
+      // Приватне вікно чи заборонене сховище: урок пройдено, лише галочки в списку не буде.
+    }
+  }
+
+  function lessonHref(id) {
+    return "?lesson=" + encodeURIComponent(id);
+  }
+
+  // Що робити після уроку: наступний урок або, після останнього, список уроків.
+  function showFinish() {
+    if (!currentLesson) return;
+    markDone(currentLesson.id);
+    const index = allLessons.findIndex((item) => item.id === currentLesson.id);
+    const next = index >= 0 ? allLessons[index + 1] : undefined;
+    const text = document.getElementById("edu-finish-text");
+    const nextLink = document.getElementById("edu-finish-next");
+    if (next) {
+      text.textContent = "Далі: " + next.title + ".";
+      nextLink.href = lessonHref(next.id);
+      nextLink.textContent = "Наступний урок";
+      nextLink.hidden = false;
+    } else {
+      text.textContent = "Це був останній урок. Курс пройдено!";
+      nextLink.hidden = true;
+    }
+    finishCard.hidden = false;
+    badge.hidden = true;
+  }
 
   function isValidId(value) {
     return /^[a-z0-9_]{1,40}$/.test(value || "");
@@ -34,11 +82,15 @@
 
   function showLessonList(lessons) {
     const list = document.getElementById("lesson-list");
+    const done = loadDone();
+    const nextId = (lessons.find((item) => !done.includes(item.id)) || {}).id;
     for (const lesson of lessons) {
       const link = document.createElement("a");
       link.className = "lesson-link";
-      link.href = "?lesson=" + encodeURIComponent(lesson.id);
-      link.textContent = lesson.title;
+      if (done.includes(lesson.id)) link.classList.add("done");
+      if (lesson.id === nextId && done.length > 0) link.classList.add("next");
+      link.href = lessonHref(lesson.id);
+      link.textContent = (done.includes(lesson.id) ? "✓ " : "") + lesson.title;
       const steps = document.createElement("span");
       steps.textContent = lesson.steps + " " + stepsWord(lesson.steps);
       link.appendChild(steps);
@@ -83,8 +135,8 @@
     } else if (event.type === "step_done") {
       badge.textContent = event.step >= event.of ? "Усі кроки виконано" : "Крок " + (event.step + 1) + " з " + event.of;
     } else if (event.type === "lesson_done") {
-      badge.textContent = "Урок завершено!";
-      badge.classList.add("done");
+      showFinish();
+      return;
     } else {
       return;
     }
@@ -140,11 +192,13 @@
       return;
     }
     const lessons = await loadLessons();
+    allLessons = lessons;
     const lesson = isValidId(lessonId) && lessons.find((item) => item.id === lessonId);
     if (!lesson) {
       showLessonList(lessons);
       return;
     }
+    currentLesson = lesson;
     const title = document.getElementById("lesson-title");
     title.textContent = lesson.title;
     title.hidden = false;

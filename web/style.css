@@ -151,3 +151,36 @@ html, body {
 }
 .edu-progress[hidden] { display: none; }
 .edu-progress.done { background: var(--ok); }
+
+/* Картка після уроку: наступний урок або список уроків. Блендер лишається відкритим, тож картка внизу й невелика. */
+.edu-finish {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  z-index: 6;
+  transform: translateX(-50%);
+  width: min(420px, calc(100vw - 32px));
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--card);
+  color: var(--text);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .35);
+}
+.edu-finish[hidden] { display: none; }
+.edu-finish-title { margin: 0; font-weight: 700; color: var(--ok); }
+.edu-finish-text { margin: 4px 0 12px; color: var(--muted); font-size: 14px; }
+.edu-finish-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.edu-finish-btn {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+}
+.edu-finish-btn[hidden] { display: none; }
+.edu-finish-btn.secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+.lesson-link.done { color: var(--muted); }
+.lesson-link.next { border-color: var(--accent); }
