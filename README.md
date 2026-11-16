@@ -39,6 +39,11 @@
 через `BroadcastChannel("edu-blender")` та `window.opener.postMessage`.
 GitHub Pages не ставить заголовки COOP/COEP, тому їх додає `coi-serviceworker.js`.
 
+Пройдені уроки мають галочку в списку. Гість пам'ятає їх лише в браузері (`localStorage`, `edu-blender-done`).
+На сайті (`/blender/`) учень, що увійшов, має свій список (`edu-blender-done:<id учня>`) і той самий список в акаунті:
+`GET`/`PUT /api/student/trainer-solved` з `trainer: "blender"`. Так пройдені уроки бачить учитель класу.
+Список гостя в акаунт не йде. На GitHub Pages API немає, і сторінка працює як для гостя.
+
 Локально: `python tools/build_web.py && cd web && python -m http.server 8000`.
 Розгортання: `.github/workflows/pages.yml` (Settings → Pages → Source: GitHub Actions).
 Сторонні файли й ліцензії: `web/NOTICE.md`.
