@@ -3,19 +3,20 @@
 Малюється поверх 3D-виду (gpu + blf) біля місця, де треба щось натиснути:
   * tool:* — праворуч від потрібної кнопки на панелі інструментів;
   * menu:* / op:* — під потрібним меню в заголовку 3D-виду;
-  * panel:transform — ліворуч від бічної панелі;
+  * panel:transform — на ярлик Item бічної панелі, а коли вкладка відкрита, на потрібне поле;
+  * ptab:* — на вкладку редактора властивостей (лише якщо це остання ціль кроку);
   * gizmo:navigate — біля кольорових осей огляду;
   * без цілі — внизу посередині.
 Python не знає точних координат кнопок Blender, тому положення рахуємо з розмірів
-регіонів і стандартної розкладки. Саму кнопку додатково підсвічує lock.py.
+регіонів і стандартної розкладки. Саму кнопку додатково підсвічує lock.py, а цілі поза
+полотном 3D-виду (ярлики, поля бічної панелі, вкладки властивостей) обводить overlay.py.
+Текст завдання може мати розмітку (див. richtext.py): назви кнопок жирним, осі кольором осі.
 """
-
-import math
 
 import blf
 import bpy
-import gpu
-from gpu_extras.batch import batch_for_shader
+
+from . import overlay, richtext, shapes
 
 BG = (0.09, 0.13, 0.24, 1.0)
 BORDER = (0.96, 0.76, 0.18, 1.0)
@@ -30,7 +31,8 @@ BORDER_PX = 2
 ARROW = 12
 FONT_TITLE = 13
 FONT_TEXT = 14
-LINE_GAP = 1.35
+LINE_GAP = 1.45
+NO_OBJECT_HINT = "Вкладка **Item** з'являється, коли тіло виділено: спершу клацни по ньому."
 
 # Центр кнопок меню в заголовку 3D-виду (Object Mode, масштаб 1), пікселі від лівого краю.
 HEADER_MENU_X = {
@@ -76,6 +78,11 @@ FRAME_FIELD_X = {
     "Scene.frame_end": 113,
 }
 
+# Кольорові осі огляду (gizmo) у правому верхньому куті вільного місця: центр і радіус.
+GIZMO_FROM_RIGHT = 47
+GIZMO_FROM_TOP = 46
+GIZMO_RADIUS = 42
+
 # Панель інструментів: висота кнопки й відступи (масштаб 1).
 TOOL_TOP = 6
 TOOL_STEP = 36
@@ -86,31 +93,12 @@ _handler = None
 
 
 def _scale() -> float:
-    system = bpy.context.preferences.system
-    return system.ui_scale * system.pixel_size
+    # system.ui_scale уже враховує DPI екрана й масштаб інтерфейсу. pixel_size — лише товщина ліній
+    # (на екранах 200% вона 2), тому на неї не множимо, інакше все вдвічі більше й не на місці.
+    return bpy.context.preferences.system.ui_scale
 
 
 # ---------------------------------------------------------------- shapes
-
-def _rounded_rect(x, y, w, h, r, segments=6):
-    corners = ((x + w - r, y + h - r, 0), (x + r, y + h - r, 90), (x + r, y + r, 180), (x + w - r, y + r, 270))
-    outline = []
-    for cx, cy, start in corners:
-        for i in range(segments + 1):
-            angle = math.radians(start + 90 * i / segments)
-            outline.append((cx + r * math.cos(angle), cy + r * math.sin(angle)))
-    center = (x + w / 2, y + h / 2)
-    tris = []
-    for i in range(len(outline)):
-        tris += [center, outline[i], outline[(i + 1) % len(outline)]]
-    return tris
-
-
-def _fill(shader, tris, color):
-    batch = batch_for_shader(shader, 'TRIS', {"pos": tris})
-    shader.uniform_float("color", color)
-    batch.draw(shader)
-
 
 def _arrow(side, x, y, w, h, target, size):
     """Трикутник від краю бульбашки до цілі."""
@@ -128,23 +116,6 @@ def _arrow(side, x, y, w, h, target, size):
         base = min(max(tx, x + size + RADIUS), x + w - size - RADIUS)
         return [(base - size, y), (base + size, y), (base, y - size)]
     return []
-
-
-# ---------------------------------------------------------------- text
-
-def _wrap(text, width, size):
-    blf.size(0, size)
-    lines, line = [], ""
-    for word in text.split():
-        probe = (line + " " + word).strip()
-        if blf.dimensions(0, probe)[0] <= width or not line:
-            line = probe
-        else:
-            lines.append(line)
-            line = word
-    if line:
-        lines.append(line)
-    return lines
 
 
 # ---------------------------------------------------------------- placement
@@ -208,15 +179,24 @@ def _target(token, area, window_region):
         ui = _region(area, 'UI')
         right = ui.x - left if ui is not None and ui.width > 1 else window_region.width
         return "right", (right, top - 220 * s - window_region.y)
-    if kind == "panel":
-        ui = _region(area, 'UI')
-        if ui is None or ui.width <= 1:
+    if token == "panel:transform":
+        _, ui, rect = overlay.sidebar_focus(area)
+        if ui is None:
             return None
-        return "right", (ui.x - left, top - 90 * s - window_region.y)
+        y = ui.y + rect[1] + rect[3] / 2 - window_region.y
+        return "right", (ui.x - left, min(max(y, 0), ui.y + ui.height - window_region.y))
+    if kind == "ptab":
+        rect = overlay.properties_focus(bpy.context.window, name)
+        if rect is None:
+            return None
+        ui = _region(area, 'UI')
+        right = (ui.x if ui is not None and ui.width > 1 else area.x + area.width) - left
+        return "right", (right, rect[1] + rect[3] / 2 - window_region.y)
     if kind == "gizmo":
         ui = _region(area, 'UI')
         right = (ui.x if ui and ui.width > 1 else left + window_region.width) - left
-        return "right", (right - 110 * s, top - 70 * s - window_region.y)
+        x = right - (GIZMO_FROM_RIGHT + GIZMO_RADIUS) * s
+        return "right", (x, _ceiling(area, window_region) - GIZMO_FROM_TOP * s)
     return None
 
 
@@ -230,7 +210,18 @@ def _ceiling(area, window_region) -> float:
     return lowest - window_region.y
 
 
-def _layout(side, target, w, h, region, s, ceiling):
+def _free_x(area, region):
+    """Ліва і права межа вільного місця полотна: між панеллю інструментів і бічною панеллю.
+
+    Обидві панелі малюються поверх полотна, і бульбашка під ними була б схована.
+    """
+    tools, ui = _region(area, 'TOOLS'), _region(area, 'UI')
+    left = tools.x + tools.width - region.x if tools is not None and tools.width > 1 else 0
+    right = ui.x - region.x if ui is not None and ui.width > 1 else region.width
+    return max(0, left), min(region.width, right)
+
+
+def _layout(side, target, w, h, region, s, ceiling, free):
     margin = 8 * s
     if side == "left":
         # Стрілка біля верхнього краю бульбашки, сама бульбашка йде вниз.
@@ -242,8 +233,8 @@ def _layout(side, target, w, h, region, s, ceiling):
     elif side == "bottom":
         x, y = target[0] - 40 * s, target[1] + ARROW * s + margin
     else:
-        x, y = (region.width - w) / 2, 40 * s
-    x = min(max(x, margin), region.width - w - margin)
+        x, y = (free[0] + free[1] - w) / 2, 40 * s
+    x = max(min(x, free[1] - w - margin), free[0] + margin)
     y = min(max(y, margin), ceiling - h - margin)
     return x, y
 
@@ -258,7 +249,24 @@ def _content():
     done, total = course.progress()
     title = f"Крок {done + 1} з {total}"
     tokens = step.get("highlight", [])
-    return title, step["task"], course.message(), (tokens[-1] if tokens else "")
+    hint = course.message() or step.get("tip", "")
+    if "panel:transform" in tokens and overlay.sidebar_focus(bpy.context.area)[0] == "no_object":
+        hint = (hint + " " if hint else "") + NO_OBJECT_HINT
+    return title, step["task"], hint, _primary(tokens)
+
+
+def _primary(tokens) -> str:
+    """Ціль стрілки: остання з кроку. Панель останньої дії (hud:redo) — лише коли вона видна,
+    інакше стрілка веде до наступної цілі (наприклад, меню Add, щоб додати тіло заново)."""
+    if not tokens:
+        return ""
+    if "hud:redo" in tokens:
+        hud = _region(bpy.context.area, 'HUD')
+        if hud is not None and hud.width > 1:
+            return "hud:redo"
+        rest = [t for t in tokens if t != "hud:redo"]
+        return rest[-1] if rest else ""
+    return tokens[-1]
 
 
 def _draw():
@@ -271,24 +279,20 @@ def _draw():
     s = _scale()
     width = WIDTH * s
     text_w = width - 2 * PAD * s
-    lines = _wrap(task, text_w, FONT_TEXT * s)
-    hint_lines = _wrap(hint, text_w, FONT_TEXT * s) if hint else []
+    lines = richtext.wrap(task, text_w, FONT_TEXT * s, s)
+    hint_lines = richtext.wrap(hint, text_w, FONT_TEXT * s, s) if hint else []
     line_h = FONT_TEXT * s * LINE_GAP
     height = (2 * PAD + FONT_TITLE * LINE_GAP + 4) * s + line_h * (len(lines) + len(hint_lines))
 
     placed = _target(token, area, region) if token else None
     side, target = placed if placed else ("none", None)
-    x, y = _layout(side, target, width, height, region, s, _ceiling(area, region))
+    x, y = _layout(side, target, width, height, region, s, _ceiling(area, region), _free_x(area, region))
 
-    shader = gpu.shader.from_builtin('UNIFORM_COLOR')
-    gpu.state.blend_set('ALPHA')
-    arrow_outer = _arrow(side, x, y, width, height, target, ARROW * s) if target else []
-    if arrow_outer:
-        _fill(shader, arrow_outer, BORDER)
-    _fill(shader, _rounded_rect(x, y, width, height, RADIUS * s), BORDER)
+    if target:
+        shapes.fill(_arrow(side, x, y, width, height, target, ARROW * s), BORDER)
+    shapes.fill(shapes.rounded_rect(x, y, width, height, RADIUS * s), BORDER)
     b = BORDER_PX * s
-    _fill(shader, _rounded_rect(x + b, y + b, width - 2 * b, height - 2 * b, (RADIUS - BORDER_PX) * s), BG)
-    gpu.state.blend_set('NONE')
+    shapes.fill(shapes.rounded_rect(x + b, y + b, width - 2 * b, height - 2 * b, (RADIUS - BORDER_PX) * s), BG)
 
     cursor = y + height - PAD * s - FONT_TITLE * s
     blf.size(0, FONT_TITLE * s)
@@ -296,19 +300,15 @@ def _draw():
     blf.position(0, x + PAD * s, cursor, 0)
     blf.draw(0, title)
     cursor -= (FONT_TITLE * (LINE_GAP - 1) + 4) * s + line_h
-    blf.size(0, FONT_TEXT * s)
     for color, block in ((TEXT, lines), (HINT, hint_lines)):
-        blf.color(0, *color)
-        for line in block:
-            blf.position(0, x + PAD * s, cursor, 0)
-            blf.draw(0, line)
-            cursor -= line_h
+        cursor = richtext.draw_lines(block, x + PAD * s, cursor, line_h, FONT_TEXT * s, s, color)
 
 
 def enable() -> None:
     global _handler
     if _handler is None:
         _handler = bpy.types.SpaceView3D.draw_handler_add(_draw, (), 'WINDOW', 'POST_PIXEL')
+    overlay.enable()
 
 
 def disable() -> None:
@@ -316,3 +316,4 @@ def disable() -> None:
     if _handler is not None:
         bpy.types.SpaceView3D.draw_handler_remove(_handler, 'WINDOW')
         _handler = None
+    overlay.disable()

@@ -5,7 +5,7 @@
   "scene": ["cube"],
   "steps": [
     {
-      "task": "На сцені є куб, камера і світло. Клацни лівою кнопкою миші по кубу, щоб виділити його. Виділений об'єкт отримує жовтогарячу рамку.",
+      "task": "На сцені є куб, камера і світло. Клацни **лівою кнопкою миші** по кубу, щоб виділити його. Виділений об'єкт отримує жовтогарячу рамку.",
       "check": {"type": "selected", "kind": "cube"},
       "highlight": ["tool:builtin.select_box"],
       "new_tool": {
@@ -17,7 +17,7 @@
       }
     },
     {
-      "task": "Оглянь сцену з усіх боків: затисни коліщатко миші й потягни. Без миші тягни кольорові кружечки X, Y, Z у правому верхньому куті.",
+      "task": "Оглянь сцену з усіх боків: затисни **коліщатко миші** й потягни. Без миші тягни кольорові кружечки [x]X[/x], [y]Y[/y], [z]Z[/z] у правому верхньому куті.",
       "check": {"type": "view_rotated", "min_degrees": 25},
       "highlight": ["gizmo:navigate"],
       "new_tool": {
@@ -29,7 +29,7 @@
       }
     },
     {
-      "task": "Куб нам не потрібен. Виділи його і натисни клавішу X або Delete. Або відкрий меню Object угорі і вибери Delete.",
+      "task": "Куб нам не потрібен. Виділи його і натисни клавішу [k]X[/k] або [k]Delete[/k]. Або відкрий меню **Object** угорі і вибери **Delete**.",
       "unlock": ["object.delete"],
       "check": {"type": "absent", "kind": "cube"},
       "highlight": ["menu:VIEW3D_MT_object", "op:object.delete"],
@@ -42,7 +42,7 @@
       }
     },
     {
-      "task": "Додай циліндр: відкрий меню Add угорі, наведи на Mesh і вибери Cylinder. Це основа майбутнього брелока.",
+      "task": "Додай циліндр: відкрий меню **Add** угорі, наведи на **Mesh** і вибери **Cylinder**. Це основа майбутнього брелока.",
       "unlock": ["add.cylinder"],
       "check": {"type": "exists", "kind": "cylinder"},
       "highlight": ["menu:VIEW3D_MT_mesh_add", "op:mesh.primitive_cylinder_add"],
@@ -55,13 +55,13 @@
       }
     },
     {
-      "task": "Тепер додай тор (бублик): Add → Mesh → Torus. Через нього брелок кріпиться до кільця.",
+      "task": "Тепер додай тор (бублик): **Add → Mesh → Torus**. Через нього брелок кріпиться до кільця.",
       "unlock": ["add.torus"],
       "check": {"type": "exists", "kind": "torus"},
       "highlight": ["menu:VIEW3D_MT_mesh_add", "op:mesh.primitive_torus_add"]
     },
     {
-      "task": "Подивись на модель спереду: наведи мишку на сцену і натисни клавішу 1. Або відкрий меню View → Viewpoint → Front. Так видно справжні розміри без перспективи.",
+      "task": "Подивись на модель спереду: наведи мишку на сцену і натисни клавішу [k]1[/k]. Або відкрий меню **View → Viewpoint → Front**. Так видно справжні розміри без перспективи.",
       "unlock": ["view.numpad"],
       "check": {"type": "side_view"},
       "highlight": ["menu:VIEW3D_MT_view_viewpoint", "op:view3d.view_axis"],

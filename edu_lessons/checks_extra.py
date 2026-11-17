@@ -70,7 +70,7 @@ def check_exported(context, params, state):
         for entry in os.scandir(folder):
             if entry.is_file() and entry.name.lower().endswith(ext) and entry.stat().st_mtime >= started:
                 return True, None
-    return False, params.get("hint", "Відкрий File → Export і вибери потрібний формат.")
+    return False, params.get("hint", "Відкрий **File → Export** і вибери потрібний формат.")
 
 
 # ---------------------------------------------------------------- об'єкти
@@ -146,7 +146,7 @@ def check_mode(context, params, state):
 def check_select_mode(context, params, state):
     modes = {"VERT": 0, "EDGE": 1, "FACE": 2}
     if not context.tool_settings.mesh_select_mode[modes[params["mode"]]]:
-        return False, params.get("hint", "У режимі редагування натисни 3 (грані) або кнопку з квадратиком угорі.")
+        return False, params.get("hint", "У режимі редагування натисни [k]3[/k] (грані) або кнопку з квадратиком угорі.")
     return True, None
 
 
@@ -201,7 +201,7 @@ def check_shading(context, params, state):
     if space is None:
         return False, None
     if space.shading.type != params["mode"]:
-        return False, params.get("hint", "Угорі праворуч у 3D-виді натисни третю кульку (Material Preview).")
+        return False, params.get("hint", "Угорі праворуч у 3D-виді натисни третю кульку (**Material Preview**).")
     return True, None
 
 
@@ -227,7 +227,7 @@ def check_keyframes(context, params, state):
         return False, f"На сцені немає об'єкта: {_label(kind)}."
     frames = {round(k.co.x) for k in _keyframes(obj)}
     if len(frames) < params.get("min_frames", 1):
-        return False, params.get("hint", "Наведи мишку на сцену і натисни I, щоб поставити ключовий кадр.")
+        return False, params.get("hint", "Наведи мишку на сцену і натисни [k]I[/k], щоб поставити ключовий кадр.")
     return True, None
 
 
