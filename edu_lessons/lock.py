@@ -82,7 +82,7 @@ def _set_allowed(features: set) -> None:
     _state.allowed_tools = _allowed_tools(features)
     _state.allowed_ops = F.collect(F.OPS, features, F.ALWAYS_OPS) | (TOOL_OPS if _state.allowed_tools else set())
     _state.allowed_menus = F.collect(F.MENUS, features, F.ALWAYS_MENUS)
-    _state.allowed_panels = F.collect(F.PANELS, features)
+    _state.allowed_panels = F.collect(F.PANELS, features, F.ALWAYS_PANELS)
     _state.allowed_props = F.collect(F.PROPS, features)
     _state.allowed_templates = F.collect(F.TEMPLATES, features)
 
