@@ -4,7 +4,7 @@ import textwrap
 
 import bpy
 
-from . import course
+from . import course, richtext
 
 CHARS_PER_PIXEL = 1 / 7.5
 ICON_CHARS = 5
@@ -17,7 +17,7 @@ def _wrapped(layout, context, text: str, icon='NONE') -> None:
         width -= ICON_CHARS
     width = max(16, width)
     col = layout.column(align=True)
-    for i, line in enumerate(textwrap.wrap(text, width) or [""]):
+    for i, line in enumerate(textwrap.wrap(richtext.plain(text), width) or [""]):
         col.label(text=line, icon=icon if i == 0 else 'BLANK1' if icon != 'NONE' else 'NONE')
 
 
@@ -128,7 +128,7 @@ class EDU_PT_lesson(bpy.types.Panel):
         if card.get("where"):
             _wrapped(box, context, "Де: " + card["where"], icon='HAND')
         if card.get("key"):
-            box.label(text="Клавіша: " + card["key"], icon='EVENT_SHIFT' if "Shift" in card["key"] else 'KEYINGSET')
+            box.label(text="Клавіша: " + richtext.plain(card["key"]), icon='EVENT_SHIFT' if "Shift" in card["key"] else 'KEYINGSET')
 
     def _draw_task(self, context, step):
         layout = self.layout
@@ -164,9 +164,26 @@ CLASSES = (
     EDU_PT_transform,
 )
 
+def _context_properties_after_transform() -> None:
+    """Панель Properties вкладки Item іде після нашої Transform, як у звичайному Blender.
+
+    Порядок панелей — порядок реєстрації, а наша Transform реєструється пізніше за вбудовані.
+    Тоді рядок Location X завжди на тому самому місці, і overlay.py точно його обводить.
+    """
+    panel = getattr(bpy.types, "VIEW3D_PT_context_properties", None)
+    if panel is None:
+        return
+    try:
+        bpy.utils.unregister_class(panel)
+        bpy.utils.register_class(panel)
+    except RuntimeError:
+        pass
+
+
 def register() -> None:
     for cls in CLASSES:
         bpy.utils.register_class(cls)
+    _context_properties_after_transform()
 
 
 def unregister() -> None:

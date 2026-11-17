@@ -74,7 +74,7 @@
       }
     },
     {
-      "task": "Праворуч у редакторі властивостей відкрий вкладку Material (червона кулька внизу стовпчика) і натисни New.",
+      "task": "Праворуч у редакторі властивостей відкрий вкладку **Material** (червона кулька внизу стовпчика, обведена жовтим) і натисни **New**.",
       "unlock": [
         "panel.material"
       ],
@@ -83,7 +83,7 @@
         "kind": "cylinder"
       },
       "highlight": [
-        "area:properties"
+        "ptab:MATERIAL"
       ],
       "new_tool": {
         "name": "Material",
@@ -93,19 +93,19 @@
       }
     },
     {
-      "task": "Вибери колір пластинки: клацни по полю Base Color і вибери яскравий колір на колі.",
+      "task": "Вибери колір пластинки: клацни по полю **Base Color** і вибери яскравий колір на колі.",
       "check": {
         "type": "material",
         "kind": "cylinder",
         "property": "color",
-        "hint": "Клацни по білій смузі Base Color і перетягни точку на кольоровому колі."
+        "hint": "Клацни по білій смузі **Base Color** і перетягни точку на кольоровому колі."
       },
       "highlight": [
-        "area:properties"
+        "ptab:MATERIAL"
       ]
     },
     {
-      "task": "Щоб побачити матеріали, угорі праворуч у 3D-виді натисни третю кульку (Material Preview). Або натисни Z і вибери Material Preview.",
+      "task": "Щоб побачити матеріали, угорі праворуч у 3D-виді натисни третю кульку (**Material Preview**). Або натисни [k]Z[/k] і вибери **Material Preview**.",
       "unlock": [
         "view.shading"
       ],
@@ -132,42 +132,42 @@
       }
     },
     {
-      "task": "Зроби кільце металевим: створи йому матеріал (New) і постав Metallic = 1.",
+      "task": "Зроби кільце металевим: створи йому матеріал (**New**) і постав **Metallic** = 1.",
       "check": {
         "type": "material",
         "kind": "torus",
         "property": "Metallic",
         "min": 0.8,
-        "hint": "Двічі клацни по полю Metallic, введи 1 і натисни Enter."
+        "hint": "Двічі клацни по полю **Metallic**, введи 1 і натисни [k]Enter[/k]."
       },
       "highlight": [
-        "area:properties"
+        "ptab:MATERIAL"
       ]
     },
     {
-      "task": "Зроби метал блискучим: зменш Roughness (шорсткість) до 0,2.",
+      "task": "Зроби метал блискучим: зменш **Roughness** (шорсткість) до 0,2.",
       "check": {
         "type": "material",
         "kind": "torus",
         "property": "Roughness",
         "max": 0.3,
-        "hint": "Що менша Roughness, то більше дзеркальний блиск."
+        "hint": "Що менша **Roughness**, то більше дзеркальний блиск."
       },
       "highlight": [
-        "area:properties"
+        "ptab:MATERIAL"
       ]
     },
     {
-      "task": "Зроби пластинку напівпрозорою: виділи її і в матеріалі зменш Alpha до 0,5.",
+      "task": "Зроби пластинку напівпрозорою: виділи її і в матеріалі зменш **Alpha** до 0,5.",
       "check": {
         "type": "material",
         "kind": "cylinder",
         "property": "Alpha",
         "max": 0.7,
-        "hint": "Alpha 1 це непрозоро, 0 повністю прозоро. Поле Alpha нижче за Base Color."
+        "hint": "Alpha 1 це непрозоро, 0 повністю прозоро. Поле **Alpha** нижче за **Base Color**."
       },
       "highlight": [
-        "area:properties"
+        "ptab:MATERIAL"
       ]
     }
   ]
