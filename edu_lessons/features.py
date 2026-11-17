@@ -78,6 +78,10 @@ MENU_PARENT = {
     "TOPBAR_MT_file_export": "TOPBAR_MT_file",
 }
 
+# Панелі, що працюють завжди: стовпчик вкладок редактора властивостей (Object, Material...).
+# Це лише навігація, а без неї учень не відкриє вкладку Material, яку просить урок 6.
+ALWAYS_PANELS = {"PROPERTIES_PT_navigation_bar"}
+
 # Панелі (вкладки редактора властивостей), які відкриваються цілими.
 PANELS = {
     "panel.material": {
