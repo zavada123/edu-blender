@@ -41,6 +41,7 @@
 `boot.js` передає додаток через `--python-expr`, ловить рядки `EDU_EVENT` і пересилає їх сайту
 через `BroadcastChannel("edu-blender")` та `window.opener.postMessage`.
 GitHub Pages не ставить заголовки COOP/COEP, тому їх додає `coi-serviceworker.js`.
+`browser-guard.js` віддає Blender клавіші, які інакше забрав би браузер: Ctrl+S зберігає проєкт, а не сторінку, F12 робить рендер, а не відкриває інструменти розробника (так само Ctrl+P/O/F/U, F1–F10, Ctrl+Shift+I і права кнопка на полотні). Браузерний Blender працює в окремому потоці, і Emscripten сам дію браузера не скасовує.
 
 Пройдені уроки мають галочку в списку. Гість пам'ятає їх лише в браузері (`localStorage`, `edu-blender-done`).
 На сайті (`/blender/`) учень, що увійшов, має свій список (`edu-blender-done:<id учня>`) і той самий список в акаунті:
@@ -54,6 +55,7 @@ GitHub Pages не ставить заголовки COOP/COEP, тому їх д�
 ## Перевірки
 
 ```bash
+node --test tools/browser_guard_test.js   # клавіші браузера на сторінці
 # Linux без екрана: Xvfb :99 &, далі
 XDG_RUNTIME_DIR=/tmp/xdg DISPLAY=:99 EDU_WALK=lesson1 EDU_SHOTS=out \
   blender --factory-startup -p 0 0 1400 860 --python tools/gui_walkthrough.py
