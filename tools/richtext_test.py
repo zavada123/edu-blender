@@ -55,7 +55,8 @@ def test_lessons_markup_is_balanced():
     for lesson in course.available_lessons():
         for i, step in enumerate(lesson["steps"], start=1):
             where = f"{lesson['id']} крок {i}"
-            for field, text in (("task", step["task"]), ("hint", step.get("check", {}).get("hint") or "")):
+            for field, text in (("task", step["task"]), ("tip", step.get("tip", "")),
+                                ("hint", step.get("check", {}).get("hint") or "")):
                 check(f"{where}: {field} без зайвих позначок", not leftovers.search(richtext.plain(text)))
             for token in step.get("highlight", []):
                 check(f"{where}: ціль {token}", bool(tokens_ok.match(token)))

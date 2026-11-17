@@ -249,10 +249,24 @@ def _content():
     done, total = course.progress()
     title = f"Крок {done + 1} з {total}"
     tokens = step.get("highlight", [])
-    hint = course.message()
+    hint = course.message() or step.get("tip", "")
     if "panel:transform" in tokens and overlay.sidebar_focus(bpy.context.area)[0] == "no_object":
         hint = (hint + " " if hint else "") + NO_OBJECT_HINT
-    return title, step["task"], hint, (tokens[-1] if tokens else "")
+    return title, step["task"], hint, _primary(tokens)
+
+
+def _primary(tokens) -> str:
+    """Ціль стрілки: остання з кроку. Панель останньої дії (hud:redo) — лише коли вона видна,
+    інакше стрілка веде до наступної цілі (наприклад, меню Add, щоб додати тіло заново)."""
+    if not tokens:
+        return ""
+    if "hud:redo" in tokens:
+        hud = _region(bpy.context.area, 'HUD')
+        if hud is not None and hud.width > 1:
+            return "hud:redo"
+        rest = [t for t in tokens if t != "hud:redo"]
+        return rest[-1] if rest else ""
+    return tokens[-1]
 
 
 def _draw():

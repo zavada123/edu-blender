@@ -60,32 +60,22 @@
   ],
   "steps": [
     {
-      "task": "Додай кульку-намистинку: **Add → Mesh → UV Sphere**.",
+      "task": "Додай кульку-намистинку: **Add → Mesh → UV Sphere**. Одразу ліворуч унизу з'явиться панель **Add UV Sphere**: розгорни її і постав **Segments** = 8, **Rings** = 6, щоб кулька стала гранчастою.",
+      "tip": "Панель живе лише до наступного клацання. Зникла? Видали кульку ([k]X[/k]) і додай нову, а тоді одразу міняй числа.",
       "unlock": [
-        "add.uv_sphere"
-      ],
-      "check": {
-        "type": "exists",
-        "kind": "uv_sphere"
-      },
-      "highlight": [
-        "menu:VIEW3D_MT_mesh_add",
-        "op:mesh.primitive_uv_sphere_add"
-      ]
-    },
-    {
-      "task": "Зроби кульку гранчастою: ліворуч унизу розгорни панель **Add UV Sphere** і постав **Segments** = 8, **Rings** = 6.",
-      "unlock": [
+        "add.uv_sphere",
         "redo.panel"
       ],
       "check": {
         "type": "vertices",
         "kind": "uv_sphere",
         "max": 100,
-        "hint": "Панель з'являється одразу після додавання. Якщо її немає, видали кульку і додай знову."
+        "hint": "Кулька ще кругла. Якщо панелі **Add UV Sphere** ліворуч унизу немає, видали кульку ([k]X[/k]) і додай нову через **Add → Mesh → UV Sphere**, нічого не клацаючи між цим."
       },
       "highlight": [
-        "hud:redo"
+        "hud:redo",
+        "menu:VIEW3D_MT_mesh_add",
+        "op:mesh.primitive_uv_sphere_add"
       ],
       "new_tool": {
         "name": "Adjust Last Operation",

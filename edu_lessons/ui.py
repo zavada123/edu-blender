@@ -139,6 +139,9 @@ class EDU_PT_lesson(bpy.types.Panel):
         if message:
             box = layout.box()
             _wrapped(box, context, message, icon='ERROR')
+        elif step.get("tip"):
+            box = layout.box()
+            _wrapped(box, context, step["tip"], icon='QUESTION')
         layout.operator("edu.check", icon='CHECKMARK')
 
     def _draw_finished(self, context, lesson):

@@ -146,7 +146,6 @@ ACTIONS.update({
     ],
     "lesson4": [
         add_beads,
-        lambda: None,
         lambda: setattr(bpy.context.active_object, "scale", (0.2, 0.2, 0.2)),
         place_bead(0.5, 0),
         duplicate_bead(-0.5, 0),
