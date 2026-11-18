@@ -30,7 +30,7 @@
 
 ## Браузерна збірка
 
-Працює поверх [heyputer/blender-wasm](https://github.com/heyputer/blender-wasm) (Blender 5.3, WebAssembly + WebGPU, GPL).
+Працює поверх [heyputer/blender-wasm](https://github.com/heyputer/blender-wasm) (Blender 5.3, WebAssembly + WebGPU, GPL-2.0-or-later).
 Сторінка передає `--python-expr` із кодом додатка і змінну `EDU_LESSON`; рядки `EDU_EVENT` повертаються в `Module.print`.
 Сторінці потрібні заголовки `Cross-Origin-Opener-Policy: same-origin` і `Cross-Origin-Embedder-Policy: require-corp`.
 
@@ -63,4 +63,9 @@ XDG_RUNTIME_DIR=/tmp/xdg DISPLAY=:99 \
   blender --factory-startup --enable-event-simulate -p 0 0 1400 860 --python tools/lock_test.py
 ```
 
-Ліцензія: GPL-3.0-or-later (як і Blender).
+## Ліцензія
+
+Код додатка й сторінки: GPL-3.0-or-later, як і Blender ([LICENSE](LICENSE)). Це означає, що змінену версію можна поширювати лише під тією ж ліцензією і разом із вихідним кодом.
+Сторонні файли мають власні ліцензії: браузерний Blender з heyputer/blender-wasm — GPL-2.0-or-later, coi-serviceworker — MIT (див. [`web/NOTICE.md`](web/NOTICE.md)).
+
+Назва й логотип Blender — торгові марки Blender Foundation. Цей проєкт не пов'язаний з Blender Foundation і не є офіційним продуктом Blender.
