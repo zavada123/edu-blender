@@ -3,8 +3,11 @@
   --card: #ffffff;
   --text: #1c2233;
   --muted: #5d6578;
-  --accent: #2f6fed;
+  /* Основний колір EduProstir (--primary і --primary-hover сайту, шкала --pink-*), щоб кнопки були як «Надіслати». */
+  --accent: #e0185c;
+  --accent-hover: #ba0f4b;
   --accent-text: #ffffff;
+  --ring: #ff3377;
   --border: #e3e6ee;
   --error: #c62828;
   --ok: #1b8a4b;
@@ -109,6 +112,8 @@ html, body {
   font-weight: 600;
   cursor: pointer;
 }
+.start-btn:hover:not(:disabled) { background: var(--accent-hover); }
+.start-btn:focus-visible, .edu-finish-btn:focus-visible { outline: 3px solid color-mix(in srgb, var(--ring) 50%, transparent); outline-offset: 2px; }
 .start-btn:disabled { opacity: .5; cursor: default; }
 .note, .gpu-warning-text { margin: 0; color: var(--muted); font-size: 14px; }
 .note[hidden], .gpu-warning[hidden], .gpu-ack-row[hidden] { display: none; }
@@ -180,8 +185,10 @@ html, body {
   text-align: center;
   text-decoration: none;
 }
+.edu-finish-btn:hover { background: var(--accent-hover); }
 .edu-finish-btn[hidden] { display: none; }
 .edu-finish-btn.secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+.edu-finish-btn.secondary:hover { background: var(--card); border-color: var(--accent); }
 .lesson-link.done { color: var(--muted); }
 .lesson-link.next { border-color: var(--accent); }
 .lesson-link.free { border-style: dashed; }
